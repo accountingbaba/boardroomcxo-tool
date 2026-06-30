@@ -1,0 +1,14 @@
+{
+  "name": "boardroomcxo-content-tool",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npx serve -p 5173 public",
+    "deploy": "wrangler pages deploy public",
+    "db:init": "wrangler d1 execute boardroomcxo-db --file=./schema/schema.sql",
+    "db:seed": "wrangler d1 execute boardroomcxo-db --file=./schema/seed.sql"
+  },
+  "devDependencies": {
+    "wrangler": "^3.101.0"
+  }
+}

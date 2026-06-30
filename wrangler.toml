@@ -1,0 +1,17 @@
+name = "boardroomcxo-content-tool"
+compatibility_date = "2024-12-01"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "boardroomcxo-db"
+database_id = "723763e1-da13-4be7-86a7-076f3370a686"
+
+[vars]
+ENVIRONMENT = "production"
+
+# Secrets — set these via: wrangler secret put SECRET_NAME
+# ACCESS_PASSPHRASE   — the shared password your team uses to log in
+# ANTHROPIC_API_KEY   — your Claude API key
+# OPENAI_API_KEY      — your OpenAI API key (for GPT-4o and DALL-E 3)
+# TAVILY_API_KEY      — your Tavily search API key
