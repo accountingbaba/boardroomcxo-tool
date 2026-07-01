@@ -993,10 +993,10 @@ async function runRepurpose(profile, postText, postId) {
     'Writing Website Blog post',
     'Building SEO metadata and FAQs'
   ];
-  showProgress('Repurposing content for all channels...', steps);
+  const progressCard = showProgress('Repurposing content for all channels...', steps);
 
   if (isProd) {
-    const tickInterval = animateSteps(steps, 0, steps.length - 1, 4000);
+    const tickInterval = animateSteps(progressCard, steps, 0, steps.length - 1, 4000);
     try {
       const res = await fetch(`${API_BASE}/repurpose`, {
         method: 'POST',
@@ -1006,8 +1006,8 @@ async function runRepurpose(profile, postText, postId) {
       clearInterval(tickInterval);
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
-      for (let i = 0; i < steps.length; i++) setStepDone(i, steps.length);
-      finishProgress();
+      for (let i = 0; i < steps.length; i++) setStepDone(progressCard, i, steps.length);
+      finishProgress(progressCard);
       renderRepurposeResult(data);
     } catch (err) {
       clearInterval(tickInterval);
@@ -1016,11 +1016,11 @@ async function runRepurpose(profile, postText, postId) {
     }
   } else {
     for (let i = 0; i < steps.length; i++) {
-      setStepActive(i, steps.length);
+      setStepActive(progressCard, i, steps.length);
       await delay(800 + Math.random() * 400);
-      setStepDone(i, steps.length);
+      setStepDone(progressCard, i, steps.length);
     }
-    finishProgress();
+    finishProgress(progressCard);
 
     renderRepurposeResult({
       instagram: {
