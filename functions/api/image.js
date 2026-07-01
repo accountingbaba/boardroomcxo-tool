@@ -107,6 +107,7 @@ export async function onRequestPost(context) {
   const headline = formData.get('headline') || '';
   const accentWord = formData.get('accent_word') || '';
   const postId = formData.get('post_id') || null;
+  const profile = formData.get('profile') || 'boardroomcxo';
 
   if (!photoFile) return json({ error: 'Reference photo required' }, 400);
   if (!headline) return json({ error: 'Headline text required' }, 400);
