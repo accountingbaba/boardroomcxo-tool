@@ -54,7 +54,7 @@ export async function onRequestPost(context) {
 
 /* ── LEADER SPOTLIGHT RESEARCH ───────────────────────────────── */
 
-async function runLeaderResearch(env, emit) {
+async function runLeaderResearch(env, emit, alreadyShown = []) {
   // Load exclusion list from DB
   let excluded = [];
   try {
@@ -65,6 +65,10 @@ async function runLeaderResearch(env, emit) {
   } catch {
     // DB not wired yet in dev — continue with empty list
   }
+
+  // Merge in names already shown to the user earlier in this session (e.g. from
+  // a previous "show more" batch) so a fresh search doesn't repeat them.
+  excluded = Array.from(new Set([...excluded, ...alreadyShown]));
 
   // Load last 20 preferences for self-learning context
   let pastContext = '';
