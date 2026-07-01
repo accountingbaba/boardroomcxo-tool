@@ -272,9 +272,8 @@ function buildDallePrompt(customInstructions, subjectDescription, headline, acce
 SUBJECT: ${subjectDescription}
 
 TEXT OVERLAY CONTENT — bottom 20-22% of image:
-- Line 1 (large, dominant, Inter ExtraBold or Montserrat ExtraBold): "${headline}" — the word "${accentWord}" in bold orange (#FF6B00), all other text in white
-- Line 2 (same font family, Regular weight, noticeably smaller, white): "${subjectLine}"
-- Line 3 (same font family, Light weight, very small, white at 60-70% opacity): "Follow @boardroomcxo for more insights."${refinements}`;
+- Line 1 (large, dominant, Inter ExtraBold or Montserrat ExtraBold): "${headline}" — the word "${accentWord}" in bold orange (#FF6B00), all other text in white. This must render as ONE single line — no wrapping, no second line, no subline of any kind.
+- Line 2 (same font family, Light weight, very small, white at 60-70% opacity): "Follow @boardroomcxo for more insights."${refinements}`;
 }
 
 /* ── STAGE 2: Generate Image with gpt-image-1 (image-to-image edit) ─ */
