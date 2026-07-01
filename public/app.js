@@ -1841,11 +1841,10 @@ Zero em dashes. Ellipsis must appear at least once in intro and once in body.`
 
 INPUTS REQUIRED:
 1. Subject reference photograph (uploaded by user)
-2. Brand logo file/s
-3. BoardroomCXO logo file
+2. Brand logo file/s (the featured company — prominent)
+3. BoardroomCXO logo file (small watermark only)
 4. LinkedIn post text (finalised)
-5. Headline text and accent word (for overlay)
-6. Supporting line (subject name and title)
+5. Headline text and accent word (single line, for overlay)
 
 STAGE 1 — REFERENCE PHOTO ANALYSIS (GPT-4o Vision):
 Extract precise visual description of: face (shape, eyes, nose, lips, jaw, skin tone, marks), hair (colour, texture, style), expression, clothing (type, colour, fabric), glasses if present, build and posture. Output as SUBJECT DESCRIPTION — GROUND TRUTH block.
@@ -1855,8 +1854,8 @@ Format: 4:5 portrait, high resolution, LinkedIn-optimised. Single subject, centr
 Subject: Reproduce from Stage 1 exactly. Natural imperfect skin — pores visible, no smoothing, no beautification, no idealisation. Real fabric texture. Natural asymmetry. Photorealistic.
 Lighting: One dominant directional studio light. Realistic shadow. Shallow depth of field.
 Background: Deep charcoal-to-warm-grey gradient. Darker at edges. Soft bokeh. No textures or patterns.
-Text area: Bottom 20-22% — dark charcoal fade. Line 1 headline in white (accent word in gold #FF6B00). Line 2 subject name/title in white. Line 3 "Follow @boardroomcxo" in muted white 60% opacity.
-Logo zones: Top-right placeholder for BoardroomCXO logo. Right mid-frame placeholder for brand logo. Both described as clean neutral zones for manual compositing.
+Text area: Bottom 20-22% — dark charcoal fade. Line 1 headline, single line only, in white (accent word in gold #FF6B00). Line 2 "Follow @boardroomcxo" in muted white 60% opacity.
+Logo zones: Small watermark placeholder (bottom corner) for BoardroomCXO logo only — subtle, low visual weight. Prominent top-right zone reserved for the featured brand's logo(s) — sized and positioned as the dominant mark, matching the brand's own visual weight.
 Overall feel: Editorial photography. The Ken meets Bloomberg Businessweek. Real, human, credible, authoritative. Not AI-looking.
 
 STAGE 3 — QUALITY CHECK (GPT-4o Vision):
