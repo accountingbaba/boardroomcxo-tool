@@ -787,15 +787,15 @@ async function runIndustryNewsFlow() {
     'Deep analysis of top candidates',
     'Building shortlist of 5'
   ];
-  showProgress('Researching Industry News...', steps);
+  const progressCard = showProgress('Researching Industry News...', steps);
 
-  setStepActive(0, steps.length);
+  setStepActive(progressCard, 0, steps.length);
   await delay(300);
 
   let options;
 
   if (isProd) {
-    const tickInterval = animateSteps(steps, 1, steps.length - 1, 1200);
+    const tickInterval = animateSteps(progressCard, steps, 1, steps.length - 1, 1200);
     try {
       const res = await fetch(`${API_BASE}/research`, {
         method: 'POST',
@@ -813,14 +813,14 @@ async function runIndustryNewsFlow() {
       addBotMessage(`Research failed: ${err.message}. Please try again.`);
       return;
     }
-    for (let i = 0; i < steps.length; i++) setStepDone(i, steps.length);
-    finishProgress();
+    for (let i = 0; i < steps.length; i++) setStepDone(progressCard, i, steps.length);
+    finishProgress(progressCard);
   } else {
-    await delay(600); setStepDone(0, steps.length); setStepActive(1, steps.length);
-    await delay(800); setStepDone(1, steps.length); setStepActive(2, steps.length);
-    await delay(700); setStepDone(2, steps.length); setStepActive(3, steps.length);
-    await delay(900); setStepDone(3, steps.length); setStepActive(4, steps.length);
-    await delay(500); setStepDone(4, steps.length); finishProgress();
+    await delay(600); setStepDone(progressCard, 0, steps.length); setStepActive(progressCard, 1, steps.length);
+    await delay(800); setStepDone(progressCard, 1, steps.length); setStepActive(progressCard, 2, steps.length);
+    await delay(700); setStepDone(progressCard, 2, steps.length); setStepActive(progressCard, 3, steps.length);
+    await delay(900); setStepDone(progressCard, 3, steps.length); setStepActive(progressCard, 4, steps.length);
+    await delay(500); setStepDone(progressCard, 4, steps.length); finishProgress(progressCard);
     options = [
       { label: 'Myntra x Masaba collab — limited edition drops, community-led fashion', score: 86 },
       { label: 'Amitabh Bachchan launches personal D2C brand — celebrity brand play', score: 83 },
