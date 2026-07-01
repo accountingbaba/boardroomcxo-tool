@@ -1493,6 +1493,7 @@ async function runImagePipeline(personFile, allFiles, headline, accentWord) {
       formData.append('post_text', lastGeneratedPost?.post || '');
       formData.append('headline', headline);
       formData.append('accent_word', accentWord);
+      formData.append('profile', lastGeneratedPost?._profile || 'boardroomcxo');
       if (lastGeneratedPost?.post_id) formData.append('post_id', lastGeneratedPost.post_id);
       // Send stored logo data
       ['bcxo_logo','logo1','logo2','logo3','logo4'].forEach(k => {
