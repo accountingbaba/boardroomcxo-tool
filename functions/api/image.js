@@ -18,7 +18,7 @@
  * }
  */
 
-const LIMITATIONS_NOTICE = `Note: DALL-E 3 generates images from text descriptions. The subject's face in this image is based on GPT-4o's analysis of your reference photo — it will be close but will not be pixel-perfect. Always compare the generated image against your reference photo before publishing. Both logo zones are reserved as clean placeholders and must be composited manually using Canva, Figma, or any design tool. This takes approximately 5 to 10 minutes.`;
+const LIMITATIONS_NOTICE = `Note: Your reference photo is used directly as image input (not just a text description), but the model can still render the subject imperfectly — it will be close but will not be pixel-perfect. Always compare the generated image against your reference photo before publishing. Both logo zones are reserved as clean placeholders and must be composited manually using Canva, Figma, or any design tool. This takes approximately 5 to 10 minutes.`;
 
 const DEFAULT_IMAGE_INSTRUCTIONS = `Photorealistic editorial portrait photograph. 4:5 portrait format. LinkedIn social media post image.
 
