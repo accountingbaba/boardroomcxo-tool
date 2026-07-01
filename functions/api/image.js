@@ -222,7 +222,7 @@ Output only the SUBJECT DESCRIPTION block. No additional commentary.`
 
 /* ── STAGE 2: Build DALL-E Prompt ───────────────────────────── */
 
-function buildDallePrompt(subjectDescription, headline, accentWord, subjectLine, attempt, prevReport) {
+function buildDallePrompt(customInstructions, subjectDescription, headline, accentWord, subjectLine, attempt, prevReport) {
   // On retry attempts, add refinements based on what failed
   let refinements = '';
   if (attempt > 1 && prevReport) {
@@ -243,56 +243,16 @@ function buildDallePrompt(subjectDescription, headline, accentWord, subjectLine,
     }
   }
 
-  return `Photorealistic editorial portrait photograph. 4:5 portrait format. LinkedIn social media post image.
+  const instructions = (customInstructions && customInstructions.trim()) || DEFAULT_IMAGE_INSTRUCTIONS;
+
+  return `${instructions}
 
 SUBJECT: ${subjectDescription}
 
-MANDATORY SUBJECT RENDERING RULES:
-- Natural imperfect skin — pores visible, subtle lines present, natural uneven light falloff across face and neck
-- Real fabric texture on clothing — suit grain, shirt collar weight, button detail, fabric drape
-- Natural facial asymmetry — human faces are not symmetrical, do not symmetrise
-- No skin smoothing of any kind. No AI beautification. No idealisation of any feature.
-- The face must look like a real photograph of this specific person — photorealistic, not rendered, not illustrated
-
-COMPOSITION:
-- Single subject, positioned centre-frame or slightly left of centre
-- Three-quarter body visible, from mid-shin upward
-- Clean negative space on the right mid-frame reserved for logo placement
-- No decorative fills, background elements, or props
-
-LIGHTING AND SHADOW:
-- One dominant directional studio light, soft and natural, coming from slightly above and to one side
-- Realistic shadow falling on one side of the face
-- Shallow depth of field — subject in sharp focus, background softly blurred
-- A subtle natural directional shadow behind the subject falling onto the background — soft-edged, photographic, not a digital drop shadow
-- Shadow opacity: subtle — present and visible but never dramatic or heavy
-
-BACKGROUND:
-- Deep charcoal-to-warm-grey gradient background
-- Darker at edges, slightly lighter directly behind the subject
-- Soft natural bokeh blur throughout
-- No textures, no patterns, no props, no environmental elements
-- Clean professional studio backdrop
-
-TEXT AREA — bottom 20-22% of image:
-- Natural darkening of the background to near-black at the bottom — not a coloured panel placed on top
+TEXT OVERLAY CONTENT — bottom 20-22% of image:
 - Line 1 (large, dominant, Inter ExtraBold or Montserrat ExtraBold): "${headline}" — the word "${accentWord}" in bold orange (#FF6B00), all other text in white
 - Line 2 (same font family, Regular weight, noticeably smaller, white): "${subjectLine}"
-- Line 3 (same font family, Light weight, very small, white at 60-70% opacity): "Follow @boardroomcxo for more insights."
-- No drop shadows on any text. No outlined fonts. No decorative elements. High contrast, restrained, editorial.
-- The text area must feel like Fortune India, The Ken, or Bloomberg Businessweek — not a social media graphic.
-
-LOGO PLACEHOLDER ZONES:
-- Top-right corner: clean empty rectangle of dark charcoal — small, unobtrusive — reserved for logo compositing
-- Right mid-frame: clean neutral card zone with slightly rounded corners — reserved for brand logo compositing — clear of subject's face within the negative space
-
-OVERALL FEEL:
-- Editorial photography aesthetic — The Ken meets Bloomberg Businessweek
-- Real. Human. Credible. Authoritative.
-- Must feel like it was shot by a professional editorial photographer and laid out by a senior art director at a premium business publication
-- Premium and understated — earns attention because it looks important and credible, not because it is loud
-- Photorealistic, not illustrated, not rendered, not AI-looking
-- No flat lighting. No over-processed look. No glowing edges. No hyper-sharpened outlines. No plastic skin. No AI artifacts.${refinements}`;
+- Line 3 (same font family, Light weight, very small, white at 60-70% opacity): "Follow @boardroomcxo for more insights."${refinements}`;
 }
 
 /* ── STAGE 2: Generate Image with DALL-E 3 ───────────────────── */
