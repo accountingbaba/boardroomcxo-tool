@@ -197,6 +197,11 @@ function enterApp() {
 
 const panelInited = {};
 
+function switchToPanel(nav) {
+  const el = document.querySelector(`.sidebar-item[data-nav="${nav}"]`);
+  if (el) el.click();
+}
+
 document.querySelectorAll('.sidebar-item[data-nav]').forEach(el => {
   el.addEventListener('click', () => {
     document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
@@ -204,7 +209,11 @@ document.querySelectorAll('.sidebar-item[data-nav]').forEach(el => {
     const nav = el.dataset.nav;
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.getElementById(`panel-${nav}`).classList.add('active');
-    if (!panelInited[nav]) {
+    // History always re-renders (new posts get approved between visits) rather
+    // than initializing once like the mostly-static settings panels below.
+    if (nav === 'history') {
+      renderHistoryPanel();
+    } else if (!panelInited[nav]) {
       panelInited[nav] = true;
       if (nav === 'prompts') initPromptsPanel();
       if (nav === 'calendar') initCalendarPanel();
