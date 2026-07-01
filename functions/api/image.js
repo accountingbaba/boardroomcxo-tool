@@ -3,9 +3,8 @@
  * multipart/form-data fields:
  *   photo       — reference photo file (jpeg/png)
  *   post_text   — the finalised LinkedIn post text
- *   headline    — Line 1 headline text
+ *   headline    — single-line headline text
  *   accent_word — word/phrase to accent in orange
- *   subject_line — Line 2 supporting line (name + title)
  *   post_id     — (optional) DB post ID to link image to
  *
  * Returns: {
