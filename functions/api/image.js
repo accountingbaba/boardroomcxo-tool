@@ -79,7 +79,6 @@ export async function onRequestPost(context) {
   const postText = formData.get('post_text') || '';
   const headline = formData.get('headline') || '';
   const accentWord = formData.get('accent_word') || '';
-  const subjectLine = formData.get('subject_line') || '';
   const postId = formData.get('post_id') || null;
 
   if (!photoFile) return json({ error: 'Reference photo required' }, 400);
