@@ -164,33 +164,30 @@ Follow the complete operating schema. Write from Ketul's first-person POV — no
   }
 }`;
 
+  const maxTokens = 3500;
+  const raw = await callClaude(env, masterPrompt, userMessage, maxTokens, (chars) => emit({ stage: 'generating', chars, max_tokens: maxTokens }));
+  const parsed = parseJSON(raw);
+
+  // Save to DB and mark source URL as used
+  let postId = null;
   try {
-    const raw = await callClaude(env, masterPrompt, userMessage, 3500);
-    const parsed = parseJSON(raw);
+    const result = await env.DB.prepare(`
+      INSERT INTO posts (profile, content_type, subject, source_url, linkedin_post, virality_score, seo_score, aeo_score, status)
+      VALUES (?, 'industry_news', ?, ?, ?, ?, ?, ?, 'draft')
+    `).bind('ketul', brand, url, parsed.post, parsed.virality_score, parsed.seo_score, parsed.aeo_score).run();
+    postId = result.meta?.last_row_id;
 
-    // Save to DB and mark source URL as used
-    let postId = null;
-    try {
-      const result = await env.DB.prepare(`
-        INSERT INTO posts (profile, content_type, subject, source_url, linkedin_post, virality_score, seo_score, aeo_score, status)
-        VALUES (?, 'industry_news', ?, ?, ?, ?, ?, ?, 'draft')
-      `).bind('ketul', brand, url, parsed.post, parsed.virality_score, parsed.seo_score, parsed.aeo_score).run();
-      postId = result.meta?.last_row_id;
-
-      // Mark source URL as used for cross-session deduplication
-      if (url) {
-        await env.DB.prepare(
-          "INSERT OR IGNORE INTO exclusions (type, value, profile) VALUES ('source_url', ?, 'ketul')"
-        ).bind(url).run();
-      }
-    } catch {
-      // DB not wired — continue
+    // Mark source URL as used for cross-session deduplication
+    if (url) {
+      await env.DB.prepare(
+        "INSERT OR IGNORE INTO exclusions (type, value, profile) VALUES ('source_url', ?, 'ketul')"
+      ).bind(url).run();
     }
-
-    return json({ ...parsed, post_id: postId });
-  } catch (err) {
-    return json({ error: 'Generation failed', detail: err.message }, 500);
+  } catch {
+    // DB not wired — continue
   }
+
+  return { ...parsed, post_id: postId };
 }
 
 /* ── HELPERS ─────────────────────────────────────────────────── */
