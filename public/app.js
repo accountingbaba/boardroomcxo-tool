@@ -1395,12 +1395,30 @@ function showImageUploadCard(headline, accentWord, subjectLine) {
   });
 }
 
+// Maps a real backend pipeline event to a monotonically increasing overall
+// percentage. Each retry attempt (up to 3) gets its own budget slice, so the
+// bar never regresses even though the pipeline can loop back through
+// generate/quality-check on a retry.
+function imagePipelinePct(evt) {
+  const perAttempt = 25;
+  const attemptBase = 20 + (Math.max(1, evt.attempt || 1) - 1) * perAttempt;
+  const key = `${evt.stage}:${evt.status}`;
+  switch (key) {
+    case 'analyse_photo:start': return 5;
+    case 'analyse_photo:done': return 20;
+    case 'generate_image:start': return attemptBase + 5;
+    case 'generate_image:done': return attemptBase + 15;
+    case 'quality_check:start': return attemptBase + 18;
+    case 'quality_check:done': return Math.min(95, attemptBase + perAttempt);
+    default: return null;
+  }
+}
+
 async function runImagePipeline(personFile, allFiles, headline, accentWord, subjectLine) {
   chatState = 'generating';
 
   const steps = [
     'Analysing reference photo (GPT-4o Vision)',
-    'Building DALL-E 3 prompt',
     'Generating editorial image',
     'Running quality check (GPT-4o Vision)',
     'Delivering best result'
@@ -1408,7 +1426,7 @@ async function runImagePipeline(personFile, allFiles, headline, accentWord, subj
   showProgress('Generating post image...', steps);
 
   if (isProd) {
-    const tickInterval = animateSteps(steps, 0, steps.length - 1, 5000);
+    setStepActive(0, steps.length);
     try {
       const formData = new FormData();
       formData.append('photo', personFile);
@@ -1428,14 +1446,35 @@ async function runImagePipeline(personFile, allFiles, headline, accentWord, subj
         headers: { 'x-access-passphrase': passphrase },
         body: formData,
       });
-      clearInterval(tickInterval);
       if (!res.ok) throw new Error(await res.text());
-      const data = await res.json();
-      for (let i = 0; i < steps.length; i++) setStepDone(i, steps.length);
+
+      const data = await readNdjsonStream(res, (evt) => {
+        if (evt.stage === 'analyse_photo') {
+          if (evt.status === 'start') setStepActive(0, steps.length);
+          else setStepDone(0, steps.length);
+        } else if (evt.stage === 'generate_image') {
+          const label = document.getElementById('step-label-1');
+          if (label) label.textContent = evt.attempt > 1
+            ? `Generating editorial image (attempt ${evt.attempt} of 3)`
+            : 'Generating editorial image';
+          if (evt.status === 'start') setStepActive(1, steps.length);
+          else setStepDone(1, steps.length);
+        } else if (evt.stage === 'quality_check') {
+          if (evt.status === 'start') setStepActive(2, steps.length);
+          else setStepDone(2, steps.length);
+        }
+
+        // setStepActive/setStepDone above compute the bar from step index,
+        // which regresses on a retry — overwrite with the real monotonic pct.
+        const pct = imagePipelinePct(evt);
+        if (pct !== null) setProgressPct(pct);
+      });
+
+      setStepActive(3, steps.length);
+      setStepDone(3, steps.length);
       finishProgress();
       renderImageResult(data);
     } catch (err) {
-      clearInterval(tickInterval);
       chatState = 'done';
       addBotMessage(`Image generation failed: ${err.message}. Please try again.`);
     }
