@@ -600,8 +600,6 @@ async function showHeadlineApprovalCard() {
         <input type="text" class="upload-field-input" id="hl-headline" placeholder="e.g. The question that changed everything" value="${escHtml(headlineOptions[0]?.headline || '')}" />
         <div class="upload-field-label">Accent word (shown in gold — must appear in headline)</div>
         <input type="text" class="upload-field-input" id="hl-accent" value="${escHtml(headlineOptions[0]?.accent_word || '')}" placeholder="e.g. changed" />
-        <div class="upload-field-label">Subject line (name and title)</div>
-        <input type="text" class="upload-field-input" id="hl-subject" placeholder="e.g. Madhabi Puri Buch, Chairperson, SEBI" value="${escHtml(subjectLineDefault)}" />
       </div>
       <div class="headline-actions">
         <button class="save-btn" id="hl-confirm-btn">Confirm &amp; Add Photos</button>
