@@ -97,20 +97,23 @@ export async function onRequestPatch(context) {
       `UPDATE posts SET ${updates.join(', ')} WHERE id = ?`
     ).bind(...bindings).run()
 
-    // When a post is marked published, add the leader/URL to exclusions automatically
-    if (fields.status === 'published') {
+    // Add the leader/URL to exclusions as soon as a post is approved (not just
+    // published) — otherwise a leader the user already approved but hasn't
+    // published yet keeps reappearing in later shortlist searches.
+    if (fields.status === 'approved' || fields.status === 'published') {
       const post = await env.DB.prepare('SELECT * FROM posts WHERE id = ?').bind(id).first()
       if (post) {
         const exclusionId = crypto.randomUUID()
+        const reason = fields.status === 'published' ? 'Published' : 'Approved'
         if (post.content_type === 'leadership' && post.subject) {
           await env.DB.prepare(
             'INSERT OR IGNORE INTO exclusions (id, type, value, profile, reason) VALUES (?, ?, ?, ?, ?)'
-          ).bind(exclusionId, 'leader', post.subject, post.profile, 'Published').run()
+          ).bind(exclusionId, 'leader', post.subject, post.profile, reason).run()
         }
         if (post.content_type === 'industry' && post.source_url) {
           await env.DB.prepare(
             'INSERT OR IGNORE INTO exclusions (id, type, value, profile, reason) VALUES (?, ?, ?, ?, ?)'
-          ).bind(exclusionId, 'source_url', post.source_url, post.profile, 'Published').run()
+          ).bind(exclusionId, 'source_url', post.source_url, post.profile, reason).run()
         }
       }
     }
