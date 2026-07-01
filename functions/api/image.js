@@ -91,57 +91,81 @@ export async function onRequestPost(context) {
   const photoBase64 = arrayBufferToBase64(photoBuffer);
   const photoMime = photoFile.type || 'image/jpeg';
 
-  try {
-    // Stage 1: Analyse reference photo with GPT-4o Vision
-    const subjectDescription = await analysePhoto(env, photoBase64, photoMime);
+  const { readable, writable } = new TransformStream();
+  const writer = writable.getWriter();
+  const encoder = new TextEncoder();
+  const emit = (event) => writer.write(encoder.encode(JSON.stringify(event) + '\n'));
 
-    // Load the custom image prompt from DB settings, or use the bundled default
-    const customInstructions = await loadSetting(env, 'prompt_image');
+  const pipeline = (async () => {
+    try {
+      // Stage 1: Analyse reference photo with GPT-4o Vision
+      await emit({ stage: 'analyse_photo', status: 'start' });
+      const subjectDescription = await analysePhoto(env, photoBase64, photoMime);
+      await emit({ stage: 'analyse_photo', status: 'done' });
 
-    // Up to 3 generation attempts
-    let bestResult = null;
-    let bestScore = 0;
+      // Load the custom image prompt from DB settings, or use the bundled default
+      const customInstructions = await loadSetting(env, 'prompt_image');
 
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      // Stage 2: Build DALL-E prompt and generate image
-      const dallePrompt = buildDallePrompt(customInstructions, subjectDescription, headline, accentWord, subjectLine, attempt, bestResult?.qualityReport);
-      const imageB64 = await generateImage(env, dallePrompt);
+      // Up to 3 generation attempts
+      let bestResult = null;
+      let bestScore = 0;
 
-      // Stage 3: Quality check with GPT-4o Vision
-      const { score, report } = await qualityCheck(env, imageB64, photoBase64, photoMime);
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        // Stage 2: Build DALL-E prompt and generate image
+        await emit({ stage: 'generate_image', status: 'start', attempt });
+        const dallePrompt = buildDallePrompt(customInstructions, subjectDescription, headline, accentWord, subjectLine, attempt, bestResult?.report);
+        const imageB64 = await generateImage(env, dallePrompt);
+        await emit({ stage: 'generate_image', status: 'done', attempt });
 
-      if (!bestResult || score > bestScore) {
-        bestScore = score;
-        bestResult = { imageB64, score, report, dallePrompt, attempt };
+        // Stage 3: Quality check with GPT-4o Vision
+        await emit({ stage: 'quality_check', status: 'start', attempt });
+        const { score, report } = await qualityCheck(env, imageB64, photoBase64, photoMime);
+        await emit({ stage: 'quality_check', status: 'done', attempt, score });
+
+        if (!bestResult || score > bestScore) {
+          bestScore = score;
+          bestResult = { imageB64, score, report, dallePrompt, attempt };
+        }
+
+        // Deliver if above threshold
+        if (score >= 85) break;
+        // Continue to next attempt if not final
+        if (attempt === 3) break;
       }
 
-      // Deliver if above threshold
-      if (score >= 85) break;
-      // Continue to next attempt if not final
-      if (attempt === 3) break;
+      // Save image reference to DB if post_id provided
+      if (postId) {
+        try {
+          await env.DB.prepare(
+            'UPDATE posts SET image_prompt = ?, status = ? WHERE id = ?'
+          ).bind(bestResult.dallePrompt, 'draft', postId).run();
+        } catch { /* non-fatal */ }
+      }
+
+      await emit({
+        stage: 'complete',
+        result: {
+          image_url: `data:image/png;base64,${bestResult.imageB64}`,
+          attempt: bestResult.attempt,
+          quality_score: bestResult.score,
+          quality_report: bestResult.report,
+          dalle_prompt: bestResult.dallePrompt,
+          limitations_notice: LIMITATIONS_NOTICE,
+        },
+      });
+    } catch (err) {
+      await emit({ stage: 'error', message: err.message });
+    } finally {
+      await writer.close();
     }
+  })();
 
-    // Save image reference to DB if post_id provided
-    if (postId) {
-      try {
-        await env.DB.prepare(
-          'UPDATE posts SET image_prompt = ?, status = ? WHERE id = ?'
-        ).bind(bestResult.dallePrompt, 'draft', postId).run();
-      } catch { /* non-fatal */ }
-    }
+  context.waitUntil(pipeline);
 
-    return json({
-      image_url: `data:image/png;base64,${bestResult.imageB64}`,
-      attempt: bestResult.attempt,
-      quality_score: bestResult.score,
-      quality_report: bestResult.report,
-      dalle_prompt: bestResult.dallePrompt,
-      limitations_notice: LIMITATIONS_NOTICE,
-    });
-
-  } catch (err) {
-    return json({ error: 'Image pipeline failed', detail: err.message }, 500);
-  }
+  return new Response(readable, {
+    status: 200,
+    headers: { 'Content-Type': 'application/x-ndjson' },
+  });
 }
 
 /* ── STAGE 1: GPT-4o Vision — Analyse Reference Photo ───────── */
