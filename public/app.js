@@ -716,7 +716,17 @@ async function startBrew() {
 
 /* ── LEADER SPOTLIGHT FLOW ───────────────────────────────────── */
 
-async function runLeaderSpotlightFlow() {
+// Local fallback set for dev mode (no DB) — a second batch so "show more" has
+// something distinct to display when testing outside production.
+const LEADER_DEMO_BATCH_2 = [
+  { label: 'Kiran Mazumdar-Shaw — Biocon, building biotech from scratch in India', score: 83 },
+  { label: 'Sanjiv Mehta — HUL turnaround, FMCG category redefinition', score: 80 },
+  { label: 'Ghazal Alagh — Mamaearth, D2C beauty founder to public markets', score: 78 },
+  { label: 'Deepinder Goyal — Zomato, category creation and IPO journey', score: 77 },
+  { label: 'Radhika Ghai — SUGAR Cosmetics, offline-to-online beauty scale-up', score: 75 },
+];
+
+async function runLeaderSpotlightFlow(alreadyShown = []) {
   const steps = [
     'Loading exclusion list from database',
     'Scanning past preferences',
@@ -724,7 +734,7 @@ async function runLeaderSpotlightFlow() {
     'Scoring virality for each option',
     'Ready for your selection'
   ];
-  const progressCard = showProgress('Building Leader Shortlist...', steps);
+  const progressCard = showProgress(alreadyShown.length ? 'Searching for more leaders...' : 'Building Leader Shortlist...', steps);
 
   setStepActive(progressCard, 0, steps.length);
   await delay(300);
@@ -739,7 +749,7 @@ async function runLeaderSpotlightFlow() {
       const res = await fetch(`${API_BASE}/research`, {
         method: 'POST',
         headers: apiHeaders(),
-        body: JSON.stringify({ profile: 'boardroomcxo' }),
+        body: JSON.stringify({ profile: 'boardroomcxo', already_shown: alreadyShown }),
       });
       if (!res.ok) throw new Error(await res.text());
       // Real progress: the backend streams NDJSON events as Claude generates
@@ -766,7 +776,7 @@ async function runLeaderSpotlightFlow() {
     await delay(900); setStepDone(progressCard, 2, steps.length); setStepActive(progressCard, 3, steps.length);
     await delay(700); setStepDone(progressCard, 3, steps.length); setStepActive(progressCard, 4, steps.length);
     await delay(400); setStepDone(progressCard, 4, steps.length); finishProgress(progressCard);
-    options = [
+    options = alreadyShown.length ? LEADER_DEMO_BATCH_2 : [
       { label: 'Madhabi Puri Buch — SEBI Chairperson, capital markets reform', score: 88 },
       { label: 'Peyush Bansal — Lenskart, D2C vision to global retail', score: 84 },
       { label: 'Leena Nair — Chanel CEO, Indian roots, global luxury leadership', score: 81 },
@@ -775,8 +785,9 @@ async function runLeaderSpotlightFlow() {
     ];
   }
 
-  addBotMessage('Here are your top 5 leaders for this session. Click one to generate the post.');
-  showOptions('Select a leader', options, onLeaderSelected);
+  const shownNow = [...alreadyShown, ...options.map(o => o.name || o.label.split(' — ')[0])];
+  addBotMessage(alreadyShown.length ? 'Here are 5 more leaders.' : 'Here are your top 5 leaders for this session. Click one to generate the post.');
+  showOptions('Select a leader', options, onLeaderSelected, () => runLeaderSpotlightFlow(shownNow));
   chatState = 'awaiting_selection';
 }
 
