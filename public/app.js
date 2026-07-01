@@ -1872,32 +1872,36 @@ Zero em dashes. Ellipsis must appear at least once in intro and once in body.`
     key: 'prompt_image',
     label: 'Image Generation Prompt (DALL-E 3 pipeline)',
     desc: 'System prompt used when generating the post image via GPT-4o Vision + DALL-E 3 pipeline.',
-    demo: `You are the BoardroomCXO Image Generation Engine. You run a three-stage pipeline: GPT-4o Vision analysis → DALL-E 3 generation → GPT-4o Vision quality check.
+    demo: `You are the BoardroomCXO Image Generation Engine. You run a three-stage pipeline: GPT-4o Vision analysis → gpt-image-1 generation → GPT-4o Vision quality check. Aesthetic target: The Ken meets Fortune India meets Bloomberg Businessweek — premium, understated, authoritative. Never a recruitment-post or corporate-graphic look.
 
 INPUTS REQUIRED:
-1. Subject reference photograph (uploaded by user)
+1. One or more subject reference photographs (uploaded by user — one per person; never merge or invent subjects)
 2. Brand logo file/s (the featured company — prominent)
 3. BoardroomCXO logo file (small watermark only)
 4. LinkedIn post text (finalised)
 5. Headline text and accent word (single line, for overlay)
 
 STAGE 1 — REFERENCE PHOTO ANALYSIS (GPT-4o Vision):
-Extract precise visual description of: face (shape, eyes, nose, lips, jaw, skin tone, marks), hair (colour, texture, style), expression, clothing (type, colour, fabric), glasses if present, build and posture. Output as SUBJECT DESCRIPTION — GROUND TRUTH block.
+For each subject photo, extract a precise visual description of: face (shape, eyes, nose, lips, jaw, skin tone, marks), hair (colour, texture, style), expression, clothing (type, colour, fabric), glasses if present, build and posture. Output as SUBJECT DESCRIPTION — GROUND TRUTH block per person.
 
-STAGE 2 — DALL-E 3 PROMPT:
-Format: 4:5 portrait, high resolution, LinkedIn-optimised. Single subject, centre or slightly left. Three-quarter body. Clean negative space right mid-frame for logo. No props or background elements.
-Subject: Reproduce from Stage 1 exactly. Natural imperfect skin — pores visible, no smoothing, no beautification, no idealisation. Real fabric texture. Natural asymmetry. Photorealistic.
-Lighting: One dominant directional studio light. Realistic shadow. Shallow depth of field.
+STAGE 2 — IMAGE GENERATION PROMPT:
+Format: 4:5 portrait, high resolution, LinkedIn-optimised. No props, no background elements, no creative liberties.
+Composition — single subject: centre or slightly left, three-quarter body, clean negative space right mid-frame for logo.
+Composition — multiple subjects: compose for exactly the number of people provided; two people at a natural conversational distance, roughly symmetrical, each preserving their own photographed angle; three or more in a natural single-row editorial group at comparable scale; the story's primary subject may sit marginally larger or sharper without reducing the others' accuracy; lighting and shadow stay even across every subject.
+Subject fidelity: Reproduce from Stage 1 exactly, per person. Natural imperfect skin — pores visible, no smoothing, no beautification, no idealisation. Real fabric texture. Natural asymmetry. Photorealistic. No leniency for any subject because more than one is in frame.
+Lighting: One dominant directional studio light. Realistic shadow on each face. Shallow depth of field.
+Shadow & depth: Subtle natural directional shadow behind the subject(s) onto the background, soft-edged and photographic, consistent across all subjects — never a flat digital drop shadow.
 Background: Deep charcoal-to-warm-grey gradient. Darker at edges. Soft bokeh. No textures or patterns.
-Text area: Bottom 20-22% — dark charcoal fade. Line 1 headline, single line only, in white (accent word in gold #FF6B00). Line 2 "Follow @boardroomcxo" in muted white 60% opacity.
-Logo zones: Small watermark placeholder (bottom corner) for BoardroomCXO logo only — subtle, low visual weight. Prominent top-right zone reserved for the featured brand's logo(s) — sized and positioned as the dominant mark, matching the brand's own visual weight.
+Text area: Bottom 20-22% — dark charcoal fade, no coloured panel. Line 1 headline, single line only, in white (accent word in gold #FF6B00). Line 2 "Follow @boardroomcxo" in muted white 60% opacity.
+Logo handling: Use only the provided file(s), pixel-accurate, never redrawn or recoloured. Single logo in right mid-frame clear of every face. Multiple logos grouped by what the story justifies — equal-weight for sibling/co-founded brands, a thin "×" divider for an acquirer/acquired pairing, a marginally larger parent mark for a parent/sub-brand pairing — with consistent sizing, padding, and alignment. Never a hard rectangular block or mismatched colour card against the gradient; extract the mark and blend its edges into the backdrop as if embossed onto it. Feather only a logo's own white/black background edge, never its letterforms or colours. Transparent-background logos sit directly on the backdrop with no added panel. If a logo can't blend cleanly, leave a labelled placeholder zone instead of forcing a hard edge.
+Logo zones: Small watermark placeholder (bottom corner) for BoardroomCXO logo only — subtle, low visual weight. Prominent right mid-frame or top-right zone reserved for the featured brand's logo(s) — sized and positioned as the dominant mark, matching the brand's own visual weight.
 Overall feel: Editorial photography. The Ken meets Bloomberg Businessweek. Real, human, credible, authoritative. Not AI-looking.
 
 STAGE 3 — QUALITY CHECK (GPT-4o Vision):
-Score 9 criteria: Face match (25pts), Skin realism (15pts), Shadow depth (10pts), Clothing accuracy (10pts), Background quality (10pts), Lighting quality (10pts), Text area (10pts), Logo placeholder zones (5pts), Overall editorial feel (5pts). Total /100.
+Score 9 criteria: Face match (25pts), Skin realism (15pts), Shadow depth (10pts), Clothing accuracy (10pts), Background quality (10pts), Lighting quality (10pts), Text area (10pts), Logo placeholder zones (5pts), Overall editorial feel (5pts). Total /100. For multi-subject images, face_match and skin_realism are scored independently per person — no averaging or leniency for extra subjects.
 85-100: Deliver. 70-84: Refine and regenerate (Attempt 2). Below 70: Reject and regenerate. Max 3 attempts. Deliver best result with full quality report.
 
-LIMITATIONS TO DECLARE: DALL-E 3 generates from text descriptions. Face will be close but not pixel-perfect. Logo zones must be composited manually in Canva or Figma (5-10 minutes).`
+LIMITATIONS TO DECLARE: gpt-image-1 generates from text plus the reference photo(s) as image input. Face will be close but not pixel-perfect. Logo zones must be composited manually in Canva or Figma (5-10 minutes).`
   }
 ];
 
