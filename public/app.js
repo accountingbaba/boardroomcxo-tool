@@ -1432,10 +1432,10 @@ async function runImagePipeline(personFile, allFiles, headline, accentWord, subj
     'Running quality check (GPT-4o Vision)',
     'Delivering best result'
   ];
-  showProgress('Generating post image...', steps);
+  const progressCard = showProgress('Generating post image...', steps);
 
   if (isProd) {
-    setStepActive(0, steps.length);
+    setStepActive(progressCard, 0, steps.length);
     try {
       const formData = new FormData();
       formData.append('photo', personFile);
@@ -1459,29 +1459,29 @@ async function runImagePipeline(personFile, allFiles, headline, accentWord, subj
 
       const data = await readNdjsonStream(res, (evt) => {
         if (evt.stage === 'analyse_photo') {
-          if (evt.status === 'start') setStepActive(0, steps.length);
-          else setStepDone(0, steps.length);
+          if (evt.status === 'start') setStepActive(progressCard, 0, steps.length);
+          else setStepDone(progressCard, 0, steps.length);
         } else if (evt.stage === 'generate_image') {
-          const label = document.getElementById('step-label-1');
+          const label = progressCard.querySelector('#step-label-1');
           if (label) label.textContent = evt.attempt > 1
             ? `Generating editorial image (attempt ${evt.attempt} of 3)`
             : 'Generating editorial image';
-          if (evt.status === 'start') setStepActive(1, steps.length);
-          else setStepDone(1, steps.length);
+          if (evt.status === 'start') setStepActive(progressCard, 1, steps.length);
+          else setStepDone(progressCard, 1, steps.length);
         } else if (evt.stage === 'quality_check') {
-          if (evt.status === 'start') setStepActive(2, steps.length);
-          else setStepDone(2, steps.length);
+          if (evt.status === 'start') setStepActive(progressCard, 2, steps.length);
+          else setStepDone(progressCard, 2, steps.length);
         }
 
         // setStepActive/setStepDone above compute the bar from step index,
         // which regresses on a retry — overwrite with the real monotonic pct.
         const pct = imagePipelinePct(evt);
-        if (pct !== null) setProgressPct(pct);
+        if (pct !== null) setProgressPct(progressCard, pct);
       });
 
-      setStepActive(3, steps.length);
-      setStepDone(3, steps.length);
-      finishProgress();
+      setStepActive(progressCard, 3, steps.length);
+      setStepDone(progressCard, 3, steps.length);
+      finishProgress(progressCard);
       renderImageResult(data);
     } catch (err) {
       chatState = 'done';
