@@ -1259,7 +1259,7 @@ function clearStoredLogo(slotKey) {
   localStorage.setItem(LOGO_STORE_KEY, JSON.stringify(logos));
 }
 
-function showImageUploadCard(headline, accentWord, subjectLine) {
+function showImageUploadCard(headline, accentWord) {
   const area = document.getElementById('chat-area');
   const card = document.createElement('div');
   card.className = 'msg-row';
