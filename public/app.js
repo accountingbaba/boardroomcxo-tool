@@ -855,13 +855,13 @@ async function runPostGeneration(profile, item) {
   // stage to report — the bar tracks real tokens streamed back, not a timer.
   const steps = [isLeader ? 'Generating Leader Spotlight post' : 'Writing Industry News post'];
 
-  showProgress(
+  const progressCard = showProgress(
     isLeader ? 'Generating Leader Spotlight post...' : 'Writing Industry News post...',
     steps
   );
 
   if (isProd) {
-    setStepActive(0, steps.length);
+    setStepActive(progressCard, 0, steps.length);
     let data;
     try {
       const res = await fetch(`${API_BASE}/generate`, {
@@ -875,7 +875,7 @@ async function runPostGeneration(profile, item) {
           // ~4 chars/token is a rough estimate; real signal is the actual
           // character count streamed back from Claude so far, not a timer.
           const estimatedChars = evt.max_tokens * 4;
-          setProgressPct(Math.min(95, (evt.chars / estimatedChars) * 100));
+          setProgressPct(progressCard, Math.min(95, (evt.chars / estimatedChars) * 100));
         }
       });
     } catch (err) {
@@ -884,16 +884,16 @@ async function runPostGeneration(profile, item) {
       addBotMessage(`Post generation failed: ${err.message}. Please try again.`);
       return;
     }
-    setStepDone(0, steps.length);
-    finishProgress();
+    setStepDone(progressCard, 0, steps.length);
+    finishProgress(progressCard);
     renderPostResult(profile, item, data);
   } else {
     for (let i = 0; i < steps.length; i++) {
-      setStepActive(i, steps.length);
+      setStepActive(progressCard, i, steps.length);
       await delay(900 + Math.random() * 400);
-      setStepDone(i, steps.length);
+      setStepDone(progressCard, i, steps.length);
     }
-    finishProgress();
+    finishProgress(progressCard);
 
     const itemName = item.name || item.brand || item.label.split(' — ')[0];
     const demoData = isLeader
