@@ -138,7 +138,7 @@ Return exactly 5 options, ranked by score descending.`;
 
 /* ── INDUSTRY NEWS RESEARCH ──────────────────────────────────── */
 
-async function runIndustryResearch(env, emit) {
+async function runIndustryResearch(env, emit, alreadyShown = []) {
   // Load previously used source URLs for deduplication
   let usedUrls = [];
   try {
@@ -149,6 +149,10 @@ async function runIndustryResearch(env, emit) {
   } catch {
     // DB not available in dev
   }
+
+  // Merge in URLs already shown to the user earlier in this session (e.g. from
+  // a previous "show more" batch) so a fresh search doesn't repeat them.
+  usedUrls = Array.from(new Set([...usedUrls, ...alreadyShown]));
 
   // Step 1: Tavily search across accepted source tiers
   const searchQueries = [
