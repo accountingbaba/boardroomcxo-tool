@@ -801,7 +801,17 @@ async function onLeaderSelected(idx, item) {
 
 /* ── INDUSTRY NEWS FLOW ──────────────────────────────────────── */
 
-async function runIndustryNewsFlow() {
+// Local fallback set for dev mode (no DB) — a second batch so "show more" has
+// something distinct to display when testing outside production.
+const INDUSTRY_DEMO_BATCH_2 = [
+  { label: 'Nykaa Fashion x global designer capsule — premium D2C positioning', score: 82 },
+  { label: 'Tata CLiQ Luxury expands jewellery vertical — omni-channel bet', score: 79 },
+  { label: 'boAt founder launches new lifestyle brand — category repeat play', score: 76 },
+  { label: 'Ajio partners with regional designers — homegrown fashion push', score: 73 },
+  { label: 'Good Glamm Group acquires niche D2C label — roll-up strategy', score: 71 },
+];
+
+async function runIndustryNewsFlow(alreadyShown = []) {
   const prefs = loadLocalPrefs();
   const freshnessDays = prefs.articleFreshness || 25;
 
@@ -812,7 +822,7 @@ async function runIndustryNewsFlow() {
     'Deep analysis of top candidates',
     'Building shortlist of 5'
   ];
-  const progressCard = showProgress('Researching Industry News...', steps);
+  const progressCard = showProgress(alreadyShown.length ? 'Searching for more stories...' : 'Researching Industry News...', steps);
 
   setStepActive(progressCard, 0, steps.length);
   await delay(300);
@@ -825,7 +835,7 @@ async function runIndustryNewsFlow() {
       const res = await fetch(`${API_BASE}/research`, {
         method: 'POST',
         headers: apiHeaders(),
-        body: JSON.stringify({ profile: currentProfile === 'boardroomcxo' ? 'boardroomcxo' : 'ketul', max_age_days: freshnessDays }),
+        body: JSON.stringify({ profile: currentProfile === 'boardroomcxo' ? 'boardroomcxo' : 'ketul', max_age_days: freshnessDays, already_shown: alreadyShown }),
       });
       if (!res.ok) throw new Error(await res.text());
       // Real progress: searching = completed/total Tavily queries, generating =
