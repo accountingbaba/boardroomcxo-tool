@@ -54,8 +54,8 @@ TEXT AREA — bottom 20-22% of image:
 - The text area must feel like Fortune India, The Ken, or Bloomberg Businessweek — not a social media graphic.
 
 LOGO PLACEHOLDER ZONES:
-- Top-right corner: clean empty rectangle of dark charcoal — small, unobtrusive — reserved for logo compositing
-- Right mid-frame: clean neutral card zone with slightly rounded corners — reserved for brand logo compositing — clear of subject's face within the negative space
+- Bottom corner watermark zone: very small, subtle, low-contrast rectangle — reserved for the BoardroomCXO watermark only. Must read as a discreet credit mark, never competing with the subject or the featured brand.
+- Top-right corner (prominent): clean neutral card zone with slightly rounded corners, sized generously — reserved for the featured brand's own logo(s) (the company being spotlighted). This is the dominant logo zone and must clearly outweigh the BoardroomCXO watermark in size and visual prominence.
 
 OVERALL FEEL:
 - Editorial photography aesthetic — The Ken meets Bloomberg Businessweek
