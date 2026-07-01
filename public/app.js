@@ -624,11 +624,10 @@ async function showHeadlineApprovalCard() {
   card.querySelector('#hl-confirm-btn').addEventListener('click', () => {
     const headline = document.getElementById('hl-headline').value.trim();
     const accent   = document.getElementById('hl-accent').value.trim();
-    const subject  = document.getElementById('hl-subject').value.trim();
     if (!headline) { addBotMessage('Please enter a headline first.'); return; }
     card.remove();
     addBotMessage('Headline confirmed. Now upload the photos for the image.');
-    showImageUploadCard(headline, accent, subject);
+    showImageUploadCard(headline, accent);
   });
 
   card.querySelector('#hl-skip-btn').addEventListener('click', () => {
