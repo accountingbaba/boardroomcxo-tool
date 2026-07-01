@@ -726,19 +726,27 @@ async function runLeaderSpotlightFlow() {
   let options;
 
   if (isProd) {
-    const tickInterval = animateSteps(progressCard, steps, 1, steps.length - 1, 800);
+    setStepDone(progressCard, 0, steps.length);
+    setStepDone(progressCard, 1, steps.length);
+    setStepActive(progressCard, 2, steps.length);
     try {
       const res = await fetch(`${API_BASE}/research`, {
         method: 'POST',
         headers: apiHeaders(),
         body: JSON.stringify({ profile: 'boardroomcxo' }),
       });
-      clearInterval(tickInterval);
       if (!res.ok) throw new Error(await res.text());
-      const data = await res.json();
+      // Real progress: the backend streams NDJSON events as Claude generates
+      // the shortlist, so the bar tracks actual chars streamed back — not a
+      // fixed-duration timer that can run out before the real call finishes.
+      const data = await readNdjsonStream(res, (evt) => {
+        if (evt.stage === 'generating') {
+          const estimatedChars = evt.max_tokens * 4;
+          setProgressPct(progressCard, Math.min(95, 40 + (evt.chars / estimatedChars) * 55));
+        }
+      });
       options = data.options;
     } catch (err) {
-      clearInterval(tickInterval);
       chatState = 'idle';
       document.getElementById('brew-btn').disabled = false;
       addBotMessage(`Research failed: ${err.message}. Please try again.`);
