@@ -411,7 +411,7 @@ function setProgressPct(card, pct) {
 
 /* ── OPTIONS CARD ───────────────────────────────────────────── */
 
-function showOptions(header, items, onSelect) {
+function showOptions(header, items, onSelect, onShowMore) {
   const area = document.getElementById('chat-area');
   const card = document.createElement('div');
   card.className = 'msg-row';
