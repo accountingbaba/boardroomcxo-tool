@@ -718,15 +718,15 @@ async function runLeaderSpotlightFlow() {
     'Scoring virality for each option',
     'Ready for your selection'
   ];
-  showProgress('Building Leader Shortlist...', steps);
+  const progressCard = showProgress('Building Leader Shortlist...', steps);
 
-  setStepActive(0, steps.length);
+  setStepActive(progressCard, 0, steps.length);
   await delay(300);
 
   let options;
 
   if (isProd) {
-    const tickInterval = animateSteps(steps, 1, steps.length - 1, 800);
+    const tickInterval = animateSteps(progressCard, steps, 1, steps.length - 1, 800);
     try {
       const res = await fetch(`${API_BASE}/research`, {
         method: 'POST',
@@ -744,14 +744,14 @@ async function runLeaderSpotlightFlow() {
       addBotMessage(`Research failed: ${err.message}. Please try again.`);
       return;
     }
-    for (let i = 0; i < steps.length; i++) setStepDone(i, steps.length);
-    finishProgress();
+    for (let i = 0; i < steps.length; i++) setStepDone(progressCard, i, steps.length);
+    finishProgress(progressCard);
   } else {
-    await delay(500); setStepDone(0, steps.length); setStepActive(1, steps.length);
-    await delay(600); setStepDone(1, steps.length); setStepActive(2, steps.length);
-    await delay(900); setStepDone(2, steps.length); setStepActive(3, steps.length);
-    await delay(700); setStepDone(3, steps.length); setStepActive(4, steps.length);
-    await delay(400); setStepDone(4, steps.length); finishProgress();
+    await delay(500); setStepDone(progressCard, 0, steps.length); setStepActive(progressCard, 1, steps.length);
+    await delay(600); setStepDone(progressCard, 1, steps.length); setStepActive(progressCard, 2, steps.length);
+    await delay(900); setStepDone(progressCard, 2, steps.length); setStepActive(progressCard, 3, steps.length);
+    await delay(700); setStepDone(progressCard, 3, steps.length); setStepActive(progressCard, 4, steps.length);
+    await delay(400); setStepDone(progressCard, 4, steps.length); finishProgress(progressCard);
     options = [
       { label: 'Madhabi Puri Buch — SEBI Chairperson, capital markets reform', score: 88 },
       { label: 'Peyush Bansal — Lenskart, D2C vision to global retail', score: 84 },
