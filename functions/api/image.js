@@ -244,7 +244,7 @@ Output only the SUBJECT DESCRIPTION block. No additional commentary.`
 
 /* ── STAGE 2: Build DALL-E Prompt ───────────────────────────── */
 
-function buildDallePrompt(customInstructions, subjectDescription, headline, accentWord, subjectLine, attempt, prevReport) {
+function buildDallePrompt(customInstructions, subjectDescription, headline, accentWord, attempt, prevReport) {
   // On retry attempts, add refinements based on what failed
   let refinements = '';
   if (attempt > 1 && prevReport) {
