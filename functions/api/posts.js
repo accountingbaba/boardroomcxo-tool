@@ -105,12 +105,12 @@ export async function onRequestPatch(context) {
       if (post) {
         const exclusionId = crypto.randomUUID()
         const reason = fields.status === 'published' ? 'Published' : 'Approved'
-        if (post.content_type === 'leadership' && post.subject) {
+        if (post.content_type === 'leader_spotlight' && post.subject) {
           await env.DB.prepare(
             'INSERT OR IGNORE INTO exclusions (id, type, value, profile, reason) VALUES (?, ?, ?, ?, ?)'
           ).bind(exclusionId, 'leader', post.subject, post.profile, reason).run()
         }
-        if (post.content_type === 'industry' && post.source_url) {
+        if (post.content_type === 'industry_news' && post.source_url) {
           await env.DB.prepare(
             'INSERT OR IGNORE INTO exclusions (id, type, value, profile, reason) VALUES (?, ?, ?, ?, ?)'
           ).bind(exclusionId, 'source_url', post.source_url, post.profile, reason).run()
