@@ -841,9 +841,10 @@ let lastGeneratedPost = null;
 
 async function runPostGeneration(profile, item) {
   const isLeader = profile === 'boardroomcxo';
-  const steps = isLeader
-    ? ['Researching leader background', 'Applying BoardroomCXO voice', 'Running 5 quality checks', 'Persona panel review', 'Finalising post']
-    : ['Loading source article', "Drafting point of view", 'Running quality checks', 'Persona panel review', 'Finalising post'];
+  // One real step: the backend generates the whole post in a single streamed
+  // model call, so there's no genuine separate "researching" / "quality check"
+  // stage to report — the bar tracks real tokens streamed back, not a timer.
+  const steps = [isLeader ? 'Generating Leader Spotlight post' : 'Writing Industry News post'];
 
   showProgress(
     isLeader ? 'Generating Leader Spotlight post...' : 'Writing Industry News post...',
@@ -851,7 +852,7 @@ async function runPostGeneration(profile, item) {
   );
 
   if (isProd) {
-    const tickInterval = animateSteps(steps, 0, steps.length - 1, 3000);
+    setStepActive(0, steps.length);
     let data;
     try {
       const res = await fetch(`${API_BASE}/generate`, {
@@ -859,17 +860,22 @@ async function runPostGeneration(profile, item) {
         headers: apiHeaders(),
         body: JSON.stringify({ profile, item }),
       });
-      clearInterval(tickInterval);
       if (!res.ok) throw new Error(await res.text());
-      data = await res.json();
+      data = await readNdjsonStream(res, (evt) => {
+        if (evt.stage === 'generating') {
+          // ~4 chars/token is a rough estimate; real signal is the actual
+          // character count streamed back from Claude so far, not a timer.
+          const estimatedChars = evt.max_tokens * 4;
+          setProgressPct(Math.min(95, (evt.chars / estimatedChars) * 100));
+        }
+      });
     } catch (err) {
-      clearInterval(tickInterval);
       chatState = 'idle';
       document.getElementById('brew-btn').disabled = false;
       addBotMessage(`Post generation failed: ${err.message}. Please try again.`);
       return;
     }
-    for (let i = 0; i < steps.length; i++) setStepDone(i, steps.length);
+    setStepDone(0, steps.length);
     finishProgress();
     renderPostResult(profile, item, data);
   } else {
