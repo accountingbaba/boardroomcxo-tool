@@ -56,14 +56,11 @@ async function loadAllSessions() {
   return loadSessionHistory().map(s => ({ ...s, source: 'local' }));
 }
 
-async function showHistoryPanel() {
-  const panel = document.getElementById('history-panel');
-  const overlay = document.getElementById('history-overlay');
+async function renderHistoryPanel() {
   const list = document.getElementById('history-list');
   const empty = document.getElementById('history-empty');
+  if (!list || !empty) return;
 
-  overlay.style.display = 'block';
-  panel.style.display = 'flex';
   empty.style.display = 'none';
   list.style.display = 'block';
   list.innerHTML = '<div class="history-loading">Loading previous chats...</div>';
@@ -92,17 +89,12 @@ async function showHistoryPanel() {
           <button class="history-item-load" data-id="${escHtml(s.id)}">Load in chat</button>
         </div>`;
       el.querySelector('.history-item-load').addEventListener('click', () => {
-        hideHistoryPanel();
+        switchToPanel('chat');
         loadSessionIntoChat(s);
       });
       list.appendChild(el);
     });
   }
-}
-
-function hideHistoryPanel() {
-  document.getElementById('history-panel').style.display = 'none';
-  document.getElementById('history-overlay').style.display = 'none';
 }
 
 function loadSessionIntoChat(session) {
