@@ -655,13 +655,18 @@ async function getHeadlineOptions(postText, subjectLine) {
 
 // Local fallback used when the API is unreachable (or in dev without a DB/API key) —
 // derives options from the actual post text rather than a fixed template.
+const HEADLINE_STOPWORDS = new Set(['the', 'a', 'an', 'is', 'was', 'were', 'to', 'of', 'in', 'on', 'and', 'but', 'or', 'that', 'this', 'it', 'its', 'for', 'with', 'at', 'as', 'by', 'from', 'not', 'no', 'every', 'there', 'be', 'been']);
+
 function demoHeadlineOptions(postText) {
   const firstLine = (postText || '').split('\n').map(l => l.trim()).filter(Boolean)[0] || '';
   const words = firstLine.replace(/[.*_#]/g, '').split(' ').filter(Boolean);
   const hook = words.slice(0, 7).join(' ') || 'A different kind of leadership move';
+  const accentCandidate = words
+    .filter(w => !HEADLINE_STOPWORDS.has(w.toLowerCase().replace(/[^a-z]/g, '')))
+    .sort((a, b) => b.length - a.length)[0] || words[words.length - 1] || 'different';
 
   return [
-    { headline: hook, accent_word: words[Math.min(2, words.length - 1)] || 'different', virality_score: 86, virality_note: 'Opens with the post\'s own hook line — highest recall' },
+    { headline: hook, accent_word: accentCandidate, virality_score: 86, virality_note: 'Opens with the post\'s own hook line — highest recall' },
     { headline: 'The move nobody saw coming', accent_word: 'nobody', virality_score: 79, virality_note: 'Curiosity gap — strong scroll-stop power' },
     { headline: 'One decision. A category redefined.', accent_word: 'redefined', virality_score: 74, virality_note: 'Short, declarative, magazine-cover rhythm' },
     { headline: 'She built what nobody believed in', accent_word: 'believed', virality_score: 70, virality_note: 'Emotional resonance, but less specific to this post' },
