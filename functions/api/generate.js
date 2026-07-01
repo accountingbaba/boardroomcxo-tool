@@ -26,19 +26,37 @@ export async function onRequestPost(context) {
 
   const { profile, item } = body || {};
   if (!profile || !item) return json({ error: 'profile and item required' }, 400);
+  if (profile !== 'boardroomcxo' && profile !== 'ketul') return json({ error: 'Unknown profile' }, 400);
 
-  if (profile === 'boardroomcxo') {
-    return generateLeaderPost(env, item);
-  } else if (profile === 'ketul') {
-    return generateIndustryPost(env, item);
-  }
+  const { readable, writable } = new TransformStream();
+  const writer = writable.getWriter();
+  const encoder = new TextEncoder();
+  const emit = (event) => writer.write(encoder.encode(JSON.stringify(event) + '\n'));
 
-  return json({ error: 'Unknown profile' }, 400);
+  const pipeline = (async () => {
+    try {
+      const result = profile === 'boardroomcxo'
+        ? await generateLeaderPost(env, item, emit)
+        : await generateIndustryPost(env, item, emit);
+      await emit({ stage: 'complete', result });
+    } catch (err) {
+      await emit({ stage: 'error', message: err.message });
+    } finally {
+      await writer.close();
+    }
+  })();
+
+  context.waitUntil(pipeline);
+
+  return new Response(readable, {
+    status: 200,
+    headers: { 'Content-Type': 'application/x-ndjson' },
+  });
 }
 
 /* ── LEADER SPOTLIGHT POST ───────────────────────────────────── */
 
-async function generateLeaderPost(env, item) {
+async function generateLeaderPost(env, item, emit) {
   const leaderName = item.name || item.label?.split(' — ')[0] || 'the selected leader';
   const company = item.company || '';
   const angle = item.angle || '';
