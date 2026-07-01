@@ -1175,13 +1175,13 @@ function renderRepurposeResult(data) {
 
 /* ── STEP ANIMATION HELPER ───────────────────────────────────── */
 
-function animateSteps(steps, fromIdx, toIdx, intervalMs) {
+function animateSteps(card, steps, fromIdx, toIdx, intervalMs) {
   let current = fromIdx;
-  setStepActive(current, steps.length);
+  setStepActive(card, current, steps.length);
   const id = setInterval(() => {
-    setStepDone(current, steps.length);
+    setStepDone(card, current, steps.length);
     current++;
-    if (current <= toIdx) setStepActive(current, steps.length);
+    if (current <= toIdx) setStepActive(card, current, steps.length);
     else clearInterval(id);
   }, intervalMs);
   return id;
