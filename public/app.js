@@ -1413,10 +1413,9 @@ function showImageUploadCard(headline, accentWord) {
     // Read values BEFORE removing card (card contains the hidden inputs)
     const headline = card.querySelector('#img-headline')?.value || '';
     const accent   = card.querySelector('#img-accent')?.value || '';
-    const subject  = card.querySelector('#img-subject-line')?.value || '';
     if (!headline) { addBotMessage('Headline text is required before generating the image. Please go back and confirm the headline.'); return; }
     card.remove();
-    runImagePipeline(personFile, fileCache, headline, accent, subject);
+    runImagePipeline(personFile, fileCache, headline, accent);
   });
 }
 
