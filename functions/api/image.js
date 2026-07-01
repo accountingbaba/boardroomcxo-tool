@@ -361,6 +361,15 @@ Set "score" to the sum of all points earned.`
 
 /* ── HELPERS ─────────────────────────────────────────────────── */
 
+async function loadSetting(env, key) {
+  try {
+    const row = await env.DB.prepare('SELECT value FROM settings WHERE key = ?').bind(key).first();
+    return row?.value || null;
+  } catch {
+    return null;
+  }
+}
+
 function arrayBufferToBase64(buffer) {
   const bytes = new Uint8Array(buffer);
   let binary = '';
