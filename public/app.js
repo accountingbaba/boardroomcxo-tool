@@ -1295,17 +1295,16 @@ function showImageUploadCard(headline, accentWord) {
       <div class="upload-slots-grid">
         ${slotZoneHtml('person1', 'Person photo', true, true)}
         ${slotZoneHtml('person2', 'Person photo 2 (if featuring two people)', false, true)}
-        ${slotZoneHtml('bcxo_logo', 'BoardroomCXO logo', false, false)}
-        ${slotZoneHtml('logo1', 'Logo slot 1', false, false)}
-        ${slotZoneHtml('logo2', 'Logo slot 2', false, false)}
-        ${slotZoneHtml('logo3', 'Logo slot 3', false, false)}
-        ${slotZoneHtml('logo4', 'Logo slot 4', false, false)}
+        ${slotZoneHtml('bcxo_logo', 'BoardroomCXO watermark (small, subtle credit mark)', false, false)}
+        ${slotZoneHtml('logo1', 'Brand logo 1 (prominent — the company being featured)', false, false)}
+        ${slotZoneHtml('logo2', 'Brand logo 2 (prominent — second brand, if any)', false, false)}
+        ${slotZoneHtml('logo3', 'Additional brand logo 3 (optional)', false, false)}
+        ${slotZoneHtml('logo4', 'Additional brand logo 4 (optional)', false, false)}
       </div>
 
       <div class="upload-hidden-fields" style="display:none">
         <input type="text" id="img-headline" value="${escHtml(headline || '')}" />
         <input type="text" id="img-accent" value="${escHtml(accentWord || '')}" />
-        <input type="text" id="img-subject-line" value="${escHtml(subjectLine || '')}" />
       </div>
 
       <button class="upload-submit-btn" id="upload-submit-btn" disabled>Generate Image</button>
