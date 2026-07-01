@@ -114,7 +114,7 @@ export async function onRequestPost(context) {
         // Stage 2: Build DALL-E prompt and generate image
         await emit({ stage: 'generate_image', status: 'start', attempt });
         const dallePrompt = buildDallePrompt(customInstructions, subjectDescription, headline, accentWord, subjectLine, attempt, bestResult?.report);
-        const imageB64 = await generateImage(env, dallePrompt);
+        const imageB64 = await generateImage(env, dallePrompt, photoBuffer, photoMime);
         await emit({ stage: 'generate_image', status: 'done', attempt });
 
         // Stage 3: Quality check with GPT-4o Vision
