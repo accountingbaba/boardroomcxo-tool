@@ -803,19 +803,35 @@ async function runIndustryNewsFlow() {
   let options;
 
   if (isProd) {
-    const tickInterval = animateSteps(progressCard, steps, 1, steps.length - 1, 1200);
+    setStepActive(progressCard, 0, steps.length);
     try {
       const res = await fetch(`${API_BASE}/research`, {
         method: 'POST',
         headers: apiHeaders(),
         body: JSON.stringify({ profile: currentProfile === 'boardroomcxo' ? 'boardroomcxo' : 'ketul', max_age_days: freshnessDays }),
       });
-      clearInterval(tickInterval);
       if (!res.ok) throw new Error(await res.text());
-      const data = await res.json();
+      // Real progress: searching = completed/total Tavily queries, generating =
+      // actual chars streamed back from Claude — no fixed-duration timer that
+      // can run out before the real backend work (7 searches + a model call)
+      // actually finishes.
+      let searchDone = false;
+      const data = await readNdjsonStream(res, (evt) => {
+        if (evt.stage === 'searching') {
+          setProgressPct(progressCard, Math.max(5, Math.round((evt.completed / evt.total) * 40)));
+        } else if (evt.stage === 'generating') {
+          if (!searchDone) {
+            searchDone = true;
+            setStepDone(progressCard, 0, steps.length);
+            setStepDone(progressCard, 1, steps.length);
+            setStepActive(progressCard, 2, steps.length);
+          }
+          const estimatedChars = evt.max_tokens * 4;
+          setProgressPct(progressCard, Math.min(95, 40 + (evt.chars / estimatedChars) * 55));
+        }
+      });
       options = data.options;
     } catch (err) {
-      clearInterval(tickInterval);
       chatState = 'idle';
       document.getElementById('brew-btn').disabled = false;
       addBotMessage(`Research failed: ${err.message}. Please try again.`);
