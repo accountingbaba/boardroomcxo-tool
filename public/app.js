@@ -1438,7 +1438,7 @@ function imagePipelinePct(evt) {
   }
 }
 
-async function runImagePipeline(personFile, allFiles, headline, accentWord, subjectLine) {
+async function runImagePipeline(personFile, allFiles, headline, accentWord) {
   chatState = 'generating';
 
   const steps = [
