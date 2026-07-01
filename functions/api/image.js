@@ -353,7 +353,7 @@ Scoring guide:
 - background_quality (10pts): Deep charcoal-to-warm-grey gradient, clean, no props
 - lighting_quality (10pts): One dominant directional studio light, natural, realistic face shadow
 - text_area (10pts): Bottom text fade present, editorial feel, no coloured banners
-- logo_placeholder_zones (5pts): Both placeholder zones clean and clearly reserved
+- logo_placeholder_zones (5pts): Small BoardroomCXO watermark zone and prominent brand-logo zone are both clean, clearly reserved, and visually distinct in size
 - overall_editorial_feel (5pts): Feels like editorial photography, not AI-generated content
 
 Set "score" to the sum of all points earned.`
