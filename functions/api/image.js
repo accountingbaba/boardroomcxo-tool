@@ -279,23 +279,28 @@ TEXT OVERLAY CONTENT — bottom 20-22% of image:
 - Line 3 (same font family, Light weight, very small, white at 60-70% opacity): "Follow @boardroomcxo for more insights."${refinements}`;
 }
 
-/* ── STAGE 2: Generate Image with DALL-E 3 ───────────────────── */
+/* ── STAGE 2: Generate Image with gpt-image-1 (image-to-image edit) ─ */
 
-async function generateImage(env, prompt) {
-  const res = await fetch('https://api.openai.com/v1/images/generations', {
+async function generateImage(env, prompt, photoBuffer, photoMime) {
+  // Use the /edits endpoint so the uploaded reference photo is passed to the
+  // model as actual image input, not just a text description. input_fidelity:
+  // 'high' tells gpt-image-1 to preserve the subject's real facial identity.
+  const form = new FormData();
+  form.append('model', 'gpt-image-1');
+  form.append('prompt', prompt);
+  form.append('n', '1');
+  form.append('size', '1024x1536'); // portrait — 2:3 closest to 4:5 for gpt-image-1
+  form.append('quality', 'high');
+  form.append('output_format', 'png');
+  form.append('input_fidelity', 'high');
+  form.append('image', new Blob([photoBuffer], { type: photoMime || 'image/jpeg' }), 'reference.jpg');
+
+  const res = await fetch('https://api.openai.com/v1/images/edits', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
       'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
     },
-    body: JSON.stringify({
-      model: 'gpt-image-1',
-      prompt,
-      n: 1,
-      size: '1024x1536',  // portrait — 2:3 closest to 4:5 for gpt-image-1
-      quality: 'high',
-      output_format: 'png',
-    }),
+    body: form,
   });
 
   if (!res.ok) throw new Error(`Image generation error ${res.status}: ${await res.text()}`);
