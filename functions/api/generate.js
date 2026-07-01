@@ -201,7 +201,7 @@ async function loadSetting(env, key) {
   }
 }
 
-async function callClaude(env, system, user, maxTokens = 3000) {
+async function callClaude(env, system, user, maxTokens = 3000, onProgress) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -214,6 +214,7 @@ async function callClaude(env, system, user, maxTokens = 3000) {
       max_tokens: maxTokens,
       system,
       messages: [{ role: 'user', content: user }],
+      stream: true,
     }),
   });
 
@@ -222,8 +223,36 @@ async function callClaude(env, system, user, maxTokens = 3000) {
     throw new Error(`Claude API error ${res.status}: ${err}`);
   }
 
-  const data = await res.json();
-  return data.content?.[0]?.text || '';
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let text = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop();
+
+    for (const line of lines) {
+      if (!line.startsWith('data:')) continue;
+      const payload = line.slice(5).trim();
+      if (!payload) continue;
+
+      let evt;
+      try { evt = JSON.parse(payload); } catch { continue; }
+
+      if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+        text += evt.delta.text;
+        if (onProgress) await onProgress(text.length);
+      } else if (evt.type === 'error') {
+        throw new Error(evt.error?.message || 'Claude streaming error');
+      }
+    }
+  }
+
+  return text;
 }
 
 function parseJSON(text) {
