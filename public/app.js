@@ -393,6 +393,17 @@ function finishProgress() {
   if (hint) hint.textContent = 'Done.';
 }
 
+// Sets the bar to an exact percentage, independent of step index — used when
+// the backend reports continuous real progress (e.g. tokens streamed so far).
+function setProgressPct(pct) {
+  const clamped = Math.max(0, Math.min(100, Math.round(pct)));
+  const bar = document.getElementById('progress-bar');
+  const pctEl = document.getElementById('progress-pct');
+  if (bar) bar.style.width = `${clamped}%`;
+  if (pctEl) pctEl.textContent = `${clamped}%`;
+  scrollChat();
+}
+
 /* ── OPTIONS CARD ───────────────────────────────────────────── */
 
 function showOptions(header, items, onSelect) {
