@@ -1172,6 +1172,41 @@ function animateSteps(steps, fromIdx, toIdx, intervalMs) {
   return id;
 }
 
+// Reads a newline-delimited JSON event stream from the backend and invokes
+// onEvent for each parsed event as it arrives — this is what drives *real*
+// progress (as opposed to animateSteps, which is a blind timer). Resolves
+// with the payload of the terminal {stage:'complete', result} event.
+async function readNdjsonStream(response, onEvent) {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let result = null;
+  let errorMessage = null;
+
+  const processLine = (line) => {
+    if (!line.trim()) return;
+    let evt;
+    try { evt = JSON.parse(line); } catch { return; }
+    onEvent(evt);
+    if (evt.stage === 'complete') result = evt.result;
+    if (evt.stage === 'error') errorMessage = evt.message;
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop();
+    lines.forEach(processLine);
+  }
+  if (buffer) processLine(buffer);
+
+  if (errorMessage) throw new Error(errorMessage);
+  if (!result) throw new Error('Stream ended without a result');
+  return result;
+}
+
 /* ── IMAGE UPLOAD FLOW ───────────────────────────────────────── */
 
 const LOGO_STORE_KEY = 'bcxo_stored_logos';
