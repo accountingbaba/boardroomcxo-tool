@@ -21,9 +21,10 @@ export async function onRequestPost(context) {
     return json({ error: 'Invalid JSON' }, 400);
   }
 
-  const { profile } = body || {};
+  const { profile, already_shown } = body || {};
   if (!profile) return json({ error: 'profile required' }, 400);
   if (profile !== 'boardroomcxo' && profile !== 'ketul') return json({ error: 'Unknown profile' }, 400);
+  const alreadyShown = Array.isArray(already_shown) ? already_shown : [];
 
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();
@@ -33,8 +34,8 @@ export async function onRequestPost(context) {
   const pipeline = (async () => {
     try {
       const result = profile === 'boardroomcxo'
-        ? await runLeaderResearch(env, emit)
-        : await runIndustryResearch(env, emit);
+        ? await runLeaderResearch(env, emit, alreadyShown)
+        : await runIndustryResearch(env, emit, alreadyShown);
       await emit({ stage: 'complete', result });
     } catch (err) {
       await emit({ stage: 'error', message: err.message });
