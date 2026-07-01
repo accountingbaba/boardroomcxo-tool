@@ -30,12 +30,45 @@ function saveSessionToHistory(subject, profile, postText, scores) {
   localStorage.setItem(SESSION_STORE_KEY, JSON.stringify(sessions));
 }
 
-function showHistoryPanel() {
-  const sessions = loadSessionHistory();
+// Previous chats are read from the database (all posts ever generated, any device/browser)
+// when running in production, with localStorage as the dev-only / offline fallback.
+async function loadAllSessions() {
+  if (isProd) {
+    try {
+      const res = await fetch(`${API_BASE}/posts`, { headers: apiHeaders() });
+      if (!res.ok) throw new Error('Failed to load posts');
+      const data = await res.json();
+      const rows = (data.posts || []).filter(p => p.linkedin_post);
+      return rows.map(r => ({
+        id: r.id,
+        profile: r.profile,
+        subject: r.subject || (r.content_type === 'industry' ? 'Industry News' : 'Untitled'),
+        timestamp: r.created_at,
+        postText: r.linkedin_post,
+        virality_score: r.virality_score,
+        status: r.status,
+        source: 'db',
+      }));
+    } catch {
+      // Server unreachable — fall back to this browser's local history below
+    }
+  }
+  return loadSessionHistory().map(s => ({ ...s, source: 'local' }));
+}
+
+async function showHistoryPanel() {
   const panel = document.getElementById('history-panel');
   const overlay = document.getElementById('history-overlay');
   const list = document.getElementById('history-list');
   const empty = document.getElementById('history-empty');
+
+  overlay.style.display = 'block';
+  panel.style.display = 'flex';
+  empty.style.display = 'none';
+  list.style.display = 'block';
+  list.innerHTML = '<div class="history-loading">Loading previous chats...</div>';
+
+  const sessions = await loadAllSessions();
 
   list.innerHTML = '';
   if (!sessions.length) {
@@ -54,7 +87,10 @@ function showHistoryPanel() {
           <span class="history-item-date">${fmtDate(s.timestamp)}</span>
         </div>
         <div class="history-item-subject">${escHtml(s.subject)}</div>
-        <button class="history-item-load" data-id="${escHtml(s.id)}">Load in chat</button>`;
+        <div class="history-item-foot">
+          ${s.virality_score != null ? `<span class="history-item-score">Virality ${s.virality_score}/100</span>` : '<span></span>'}
+          <button class="history-item-load" data-id="${escHtml(s.id)}">Load in chat</button>
+        </div>`;
       el.querySelector('.history-item-load').addEventListener('click', () => {
         hideHistoryPanel();
         loadSessionIntoChat(s);
@@ -62,9 +98,6 @@ function showHistoryPanel() {
       list.appendChild(el);
     });
   }
-
-  overlay.style.display = 'block';
-  panel.style.display = 'flex';
 }
 
 function hideHistoryPanel() {
@@ -79,14 +112,14 @@ function loadSessionIntoChat(session) {
   addBotMessage(`Loaded session: **${session.subject}** (${profileLabel[session.profile] || session.profile})`);
 
   const label = session.profile === 'boardroomcxo' ? 'LinkedIn Post — Leader Spotlight' : 'LinkedIn Post — Industry News';
-  const scoreChips = (session.scores || []);
+  const scoreChips = session.scores || (session.virality_score != null ? [`Virality: ${session.virality_score}/100`] : []);
 
-  // Restore lastGeneratedPost so copy/approve work
+  // Restore lastGeneratedPost so copy/approve/regenerate work
   lastGeneratedPost = {
     post: session.postText,
     _profile: session.profile,
     _item: { label: session.subject },
-    post_id: null,
+    post_id: session.source === 'db' ? session.id : null,
   };
 
   showPostCard(label, session.postText, scoreChips, [
