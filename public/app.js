@@ -872,7 +872,7 @@ async function runIndustryNewsFlow(alreadyShown = []) {
     await delay(700); setStepDone(progressCard, 2, steps.length); setStepActive(progressCard, 3, steps.length);
     await delay(900); setStepDone(progressCard, 3, steps.length); setStepActive(progressCard, 4, steps.length);
     await delay(500); setStepDone(progressCard, 4, steps.length); finishProgress(progressCard);
-    options = [
+    options = alreadyShown.length ? INDUSTRY_DEMO_BATCH_2 : [
       { label: 'Myntra x Masaba collab — limited edition drops, community-led fashion', score: 86 },
       { label: 'Amitabh Bachchan launches personal D2C brand — celebrity brand play', score: 83 },
       { label: 'Reliance Retail acquires luxury distribution rights for India', score: 80 },
@@ -881,8 +881,9 @@ async function runIndustryNewsFlow(alreadyShown = []) {
     ];
   }
 
-  addBotMessage(`Here are 5 verified articles from the last ${freshnessDays} days. Click one to generate the post.`);
-  showOptions('Select a story', options, onStorySelected);
+  const shownNow = [...alreadyShown, ...options.map(o => o.url).filter(Boolean)];
+  addBotMessage(alreadyShown.length ? `Here are 5 more stories from the last ${freshnessDays} days.` : `Here are 5 verified articles from the last ${freshnessDays} days. Click one to generate the post.`);
+  showOptions('Select a story', options, onStorySelected, () => runIndustryNewsFlow(shownNow));
   chatState = 'awaiting_selection';
 }
 
