@@ -272,7 +272,12 @@ Output only the SUBJECT DESCRIPTION block. No additional commentary.`
 
 /* ── STAGE 2: Build DALL-E Prompt ───────────────────────────── */
 
-function buildDallePrompt(customInstructions, subjectDescription, headline, accentWord, attempt, prevReport) {
+const FOOTER_TAG_BY_PROFILE = {
+  boardroomcxo: 'Follow @boardroomcxo for more insights.',
+  ketul: 'Follow CA Ketul Patel for more insights.',
+};
+
+function buildDallePrompt(customInstructions, subjectDescription, headline, accentWord, profile, attempt, prevReport) {
   // On retry attempts, add refinements based on what failed
   let refinements = '';
   if (attempt > 1 && prevReport) {
