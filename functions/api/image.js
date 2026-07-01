@@ -299,6 +299,7 @@ function buildDallePrompt(customInstructions, subjectDescription, headline, acce
   }
 
   const instructions = (customInstructions && customInstructions.trim()) || DEFAULT_IMAGE_INSTRUCTIONS;
+  const footerTag = FOOTER_TAG_BY_PROFILE[profile] || FOOTER_TAG_BY_PROFILE.boardroomcxo;
 
   return `${instructions}
 
@@ -306,7 +307,7 @@ SUBJECT: ${subjectDescription}
 
 TEXT OVERLAY CONTENT — bottom 20-22% of image:
 - Line 1 (large, dominant, Inter ExtraBold or Montserrat ExtraBold): "${headline}" — the word "${accentWord}" in bold orange (#FF6B00), all other text in white. This must render as ONE single line — no wrapping, no second line, no subline of any kind.
-- Line 2 (same font family, Light weight, very small, white at 60-70% opacity): "Follow @boardroomcxo for more insights."${refinements}`;
+- Line 2 (same font family, Light weight, very small, white at 60-70% opacity): "${footerTag}"${refinements}`;
 }
 
 /* ── STAGE 2: Generate Image with gpt-image-1 (image-to-image edit) ─ */
