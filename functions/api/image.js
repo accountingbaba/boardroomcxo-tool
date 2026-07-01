@@ -139,7 +139,7 @@ export async function onRequestPost(context) {
       for (let attempt = 1; attempt <= 3; attempt++) {
         // Stage 2: Build DALL-E prompt and generate image
         await emit({ stage: 'generate_image', status: 'start', attempt });
-        const dallePrompt = buildDallePrompt(customInstructions, subjectDescription, headline, accentWord, attempt, bestResult?.report);
+        const dallePrompt = buildDallePrompt(customInstructions, subjectDescription, headline, accentWord, profile, attempt, bestResult?.report);
         const imageB64 = await generateImage(env, dallePrompt, photoBuffer, photoMime);
         await emit({ stage: 'generate_image', status: 'done', attempt });
 
