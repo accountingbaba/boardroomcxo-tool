@@ -353,52 +353,61 @@ function clearProgressReassure(card) {
   if (card && card._reassureTimer) clearTimeout(card._reassureTimer);
 }
 
-function setStepActive(index, total) {
-  const icon = document.getElementById(`step-icon-${index}`);
-  const label = document.getElementById(`step-label-${index}`);
+// NOTE: every lookup below is scoped to the specific `card` element returned
+// by showProgress(), not document.getElementById(...). The step/bar ids are
+// NOT unique across cards (each progress card reuses the same ids), so a
+// document-wide lookup would silently hit whichever card was created first —
+// which is exactly why later cards in a multi-step chat session (e.g. the
+// post-generation card that appears after the shortlist card) used to stay
+// frozen at 0%: every update was being applied to the earlier, already-done
+// card instead.
+
+function setStepActive(card, index, total) {
+  const icon = card.querySelector(`#step-icon-${index}`);
+  const label = card.querySelector(`#step-label-${index}`);
   if (!icon) return;
   icon.className = 'step-icon active';
   icon.innerHTML = '<div class="step-dot"></div>';
   label.className = 'step-label active';
   // Show at least 5% so user sees the bar has started
   const pct = Math.max(5, Math.round((index / total) * 100));
-  const bar = document.getElementById('progress-bar');
-  const pctEl = document.getElementById('progress-pct');
+  const bar = card.querySelector('#progress-bar');
+  const pctEl = card.querySelector('#progress-pct');
   if (bar) bar.style.width = `${pct}%`;
   if (pctEl) pctEl.textContent = `${pct}%`;
   scrollChat();
 }
 
-function setStepDone(index, total) {
-  const icon = document.getElementById(`step-icon-${index}`);
-  const label = document.getElementById(`step-label-${index}`);
+function setStepDone(card, index, total) {
+  const icon = card.querySelector(`#step-icon-${index}`);
+  const label = card.querySelector(`#step-label-${index}`);
   if (!icon) return;
   icon.className = 'step-icon done';
   icon.innerHTML = '<i class="ti ti-check"></i>';
   label.className = 'step-label done';
   const pct = Math.round(((index + 1) / total) * 100);
-  const bar = document.getElementById('progress-bar');
-  const pctEl = document.getElementById('progress-pct');
+  const bar = card.querySelector('#progress-bar');
+  const pctEl = card.querySelector('#progress-pct');
   if (bar) bar.style.width = `${pct}%`;
   if (pctEl) pctEl.textContent = `${pct}%`;
   scrollChat();
 }
 
-function finishProgress() {
-  const bar = document.getElementById('progress-bar');
-  const pctEl = document.getElementById('progress-pct');
+function finishProgress(card) {
+  const bar = card.querySelector('#progress-bar');
+  const pctEl = card.querySelector('#progress-pct');
   if (bar) bar.style.width = '100%';
   if (pctEl) pctEl.textContent = '100%';
-  const hint = document.getElementById('progress-hint');
+  const hint = card.querySelector('#progress-hint');
   if (hint) hint.textContent = 'Done.';
 }
 
 // Sets the bar to an exact percentage, independent of step index — used when
 // the backend reports continuous real progress (e.g. tokens streamed so far).
-function setProgressPct(pct) {
+function setProgressPct(card, pct) {
   const clamped = Math.max(0, Math.min(100, Math.round(pct)));
-  const bar = document.getElementById('progress-bar');
-  const pctEl = document.getElementById('progress-pct');
+  const bar = card.querySelector('#progress-bar');
+  const pctEl = card.querySelector('#progress-pct');
   if (bar) bar.style.width = `${clamped}%`;
   if (pctEl) pctEl.textContent = `${clamped}%`;
   scrollChat();
