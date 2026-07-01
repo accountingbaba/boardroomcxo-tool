@@ -120,7 +120,7 @@ IMPORTANT: Return ONLY valid JSON, no markdown fences, no explanation outside th
 
 /* ── INDUSTRY NEWS POST ──────────────────────────────────────── */
 
-async function generateIndustryPost(env, item) {
+async function generateIndustryPost(env, item, emit) {
   const brand = item.brand || item.label?.split(' — ')[0] || '';
   const person = item.person || '';
   const summary = item.summary || '';
