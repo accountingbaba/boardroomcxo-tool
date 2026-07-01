@@ -341,7 +341,7 @@ function showProgress(title, steps) {
 
   // After 10 seconds with no step change, show reassurance
   const reassureTimer = setTimeout(() => {
-    const hint = document.getElementById('progress-hint');
+    const hint = card.querySelector('#progress-hint');
     if (hint) hint.textContent = 'Still working — AI calls can take up to 60 seconds. Please do not refresh.';
   }, 10000);
   card._reassureTimer = reassureTimer;
