@@ -177,11 +177,6 @@ function enterApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
 
-  // Wire up history panel
-  document.getElementById('history-btn').addEventListener('click', showHistoryPanel);
-  document.getElementById('history-close').addEventListener('click', hideHistoryPanel);
-  document.getElementById('history-overlay').addEventListener('click', hideHistoryPanel);
-
   // Apply saved default profile preference
   const savedPrefs = loadLocalPrefs();
   if (savedPrefs.defaultProfile && savedPrefs.defaultProfile !== 'boardroomcxo') {
