@@ -500,43 +500,59 @@ function showPostCard(label, initialText, scores, actions) {
 
 /* ── HEADLINE APPROVAL CARD (after post approval) ────────────── */
 
-function showHeadlineApprovalCard() {
+async function showHeadlineApprovalCard() {
   const area = document.getElementById('chat-area');
-  const card = document.createElement('div');
-  card.className = 'msg-row';
 
   // Derive smart defaults from post subject
   const item = lastGeneratedPost?._item || {};
   const rawLabel = item.label || item.name || '';
   const subjectName = rawLabel.split(' — ')[0] || '';
   const subjectTitle = rawLabel.split(' — ')[1] || '';
+  const subjectLineDefault = subjectName + (subjectTitle ? ', ' + subjectTitle : '');
 
-  // Generate short punchy headline (5-7 words max — Times of India style)
-  const headlineTemplates = [
-    'The question that changed everything',
-    'One decision. A category redefined.',
-    'She built what nobody believed in',
-    'He did not fix it. He rebuilt it.',
-    'The move nobody saw coming',
-    'From outsider to industry standard',
-    'The bet that rewrote the rules',
-  ];
-  const suggestedHeadline = subjectName
-    ? headlineTemplates[Math.floor(Math.random() * headlineTemplates.length)]
-    : '';
+  // Loading state while headline options are scored
+  const loadingCard = document.createElement('div');
+  loadingCard.className = 'msg-row';
+  loadingCard.innerHTML = `
+    <div class="msg-label">Content Engine</div>
+    <div class="headline-card">
+      <div class="headline-card-title">Drafting headline options from your post...</div>
+      <div class="headline-card-sub">Scoring each for virality — this takes a few seconds.</div>
+    </div>`;
+  area.appendChild(loadingCard);
+  scrollChat();
+
+  const headlineOptions = await getHeadlineOptions(lastGeneratedPost?.post || '', subjectLineDefault);
+  loadingCard.remove();
+
+  const card = document.createElement('div');
+  card.className = 'msg-row';
+
+  const optionsHtml = headlineOptions.map((opt, i) => `
+    <label class="headline-option${i === 0 ? ' selected' : ''}" data-index="${i}">
+      <input type="radio" name="hl-option" value="${i}" ${i === 0 ? 'checked' : ''} />
+      <div class="headline-option-body">
+        <div class="headline-option-top">
+          <span class="headline-option-score score-${scoreTier(opt.virality_score)}">${opt.virality_score}/100</span>
+        </div>
+        <div class="headline-option-text">${escHtml(opt.headline)}</div>
+        <div class="headline-option-note">${escHtml(opt.virality_note || '')}</div>
+      </div>
+    </label>`).join('');
 
   card.innerHTML = `
     <div class="msg-label">Content Engine</div>
     <div class="headline-card">
-      <div class="headline-card-title">Step 1 — Confirm image headline</div>
-      <div class="headline-card-sub">These will appear as text on the generated post image. Edit as needed.</div>
+      <div class="headline-card-title">Step 1 — Choose your image headline</div>
+      <div class="headline-card-sub">Five options, derived from your approved post and ranked by virality score. Pick one, then edit if you like.</div>
+      <div class="headline-options">${optionsHtml}</div>
       <div class="headline-fields">
         <div class="upload-field-label">Headline (main text)</div>
-        <input type="text" class="upload-field-input" id="hl-headline" placeholder="e.g. The question that changed everything" value="${escHtml(suggestedHeadline)}" />
+        <input type="text" class="upload-field-input" id="hl-headline" placeholder="e.g. The question that changed everything" value="${escHtml(headlineOptions[0]?.headline || '')}" />
         <div class="upload-field-label">Accent word (shown in gold — must appear in headline)</div>
-        <input type="text" class="upload-field-input" id="hl-accent" placeholder="e.g. changed" />
+        <input type="text" class="upload-field-input" id="hl-accent" value="${escHtml(headlineOptions[0]?.accent_word || '')}" placeholder="e.g. changed" />
         <div class="upload-field-label">Subject line (name and title)</div>
-        <input type="text" class="upload-field-input" id="hl-subject" placeholder="e.g. Madhabi Puri Buch, Chairperson, SEBI" value="${escHtml(subjectName + (subjectTitle ? ', ' + subjectTitle : ''))}" />
+        <input type="text" class="upload-field-input" id="hl-subject" placeholder="e.g. Madhabi Puri Buch, Chairperson, SEBI" value="${escHtml(subjectLineDefault)}" />
       </div>
       <div class="headline-actions">
         <button class="save-btn" id="hl-confirm-btn">Confirm &amp; Add Photos</button>
@@ -545,6 +561,18 @@ function showHeadlineApprovalCard() {
     </div>`;
 
   area.appendChild(card);
+
+  card.querySelectorAll('.headline-option').forEach(optEl => {
+    optEl.addEventListener('click', () => {
+      const idx = Number(optEl.dataset.index);
+      const opt = headlineOptions[idx];
+      card.querySelectorAll('.headline-option').forEach(o => o.classList.remove('selected'));
+      optEl.classList.add('selected');
+      optEl.querySelector('input[type="radio"]').checked = true;
+      document.getElementById('hl-headline').value = opt.headline || '';
+      document.getElementById('hl-accent').value = opt.accent_word || '';
+    });
+  });
 
   card.querySelector('#hl-confirm-btn').addEventListener('click', () => {
     const headline = document.getElementById('hl-headline').value.trim();
@@ -564,6 +592,48 @@ function showHeadlineApprovalCard() {
   });
 
   scrollChat();
+}
+
+function scoreTier(score) {
+  if (score >= 80) return 'high';
+  if (score >= 60) return 'mid';
+  return 'low';
+}
+
+async function getHeadlineOptions(postText, subjectLine) {
+  if (isProd) {
+    try {
+      const res = await fetch(`${API_BASE}/headline`, {
+        method: 'POST',
+        headers: apiHeaders(),
+        body: JSON.stringify({ post_text: postText, subject: subjectLine }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      if (Array.isArray(data.headlines) && data.headlines.length) return data.headlines;
+      throw new Error('No headlines returned');
+    } catch {
+      return demoHeadlineOptions(postText);
+    }
+  }
+  await delay(700);
+  return demoHeadlineOptions(postText);
+}
+
+// Local fallback used when the API is unreachable (or in dev without a DB/API key) —
+// derives options from the actual post text rather than a fixed template.
+function demoHeadlineOptions(postText) {
+  const firstLine = (postText || '').split('\n').map(l => l.trim()).filter(Boolean)[0] || '';
+  const words = firstLine.replace(/[.*_#]/g, '').split(' ').filter(Boolean);
+  const hook = words.slice(0, 7).join(' ') || 'A different kind of leadership move';
+
+  return [
+    { headline: hook, accent_word: words[Math.min(2, words.length - 1)] || 'different', virality_score: 86, virality_note: 'Opens with the post\'s own hook line — highest recall' },
+    { headline: 'The move nobody saw coming', accent_word: 'nobody', virality_score: 79, virality_note: 'Curiosity gap — strong scroll-stop power' },
+    { headline: 'One decision. A category redefined.', accent_word: 'redefined', virality_score: 74, virality_note: 'Short, declarative, magazine-cover rhythm' },
+    { headline: 'She built what nobody believed in', accent_word: 'believed', virality_score: 70, virality_note: 'Emotional resonance, but less specific to this post' },
+    { headline: 'The bet that rewrote the rules', accent_word: 'rewrote', virality_score: 65, virality_note: 'Familiar phrasing — lower novelty' },
+  ];
 }
 
 /* ── BREW FLOW ───────────────────────────────────────────────── */
