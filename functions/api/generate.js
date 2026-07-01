@@ -99,26 +99,23 @@ IMPORTANT: Return ONLY valid JSON, no markdown fences, no explanation outside th
   }
 }`;
 
+  const maxTokens = 4000;
+  const raw = await callClaude(env, masterPrompt, userMessage, maxTokens, (chars) => emit({ stage: 'generating', chars, max_tokens: maxTokens }));
+  const parsed = parseJSON(raw);
+
+  // Save to DB
+  let postId = null;
   try {
-    const raw = await callClaude(env, masterPrompt, userMessage, 4000);
-    const parsed = parseJSON(raw);
-
-    // Save to DB
-    let postId = null;
-    try {
-      const result = await env.DB.prepare(`
-        INSERT INTO posts (profile, content_type, subject, linkedin_post, virality_score, seo_score, aeo_score, status)
-        VALUES (?, 'leader_spotlight', ?, ?, ?, ?, ?, 'draft')
-      `).bind('boardroomcxo', leaderName, parsed.post, parsed.virality_score, parsed.seo_score, parsed.aeo_score).run();
-      postId = result.meta?.last_row_id;
-    } catch {
-      // DB not wired — continue
-    }
-
-    return json({ ...parsed, post_id: postId });
-  } catch (err) {
-    return json({ error: 'Generation failed', detail: err.message }, 500);
+    const result = await env.DB.prepare(`
+      INSERT INTO posts (profile, content_type, subject, linkedin_post, virality_score, seo_score, aeo_score, status)
+      VALUES (?, 'leader_spotlight', ?, ?, ?, ?, ?, 'draft')
+    `).bind('boardroomcxo', leaderName, parsed.post, parsed.virality_score, parsed.seo_score, parsed.aeo_score).run();
+    postId = result.meta?.last_row_id;
+  } catch {
+    // DB not wired — continue
   }
+
+  return { ...parsed, post_id: postId };
 }
 
 /* ── INDUSTRY NEWS POST ──────────────────────────────────────── */
