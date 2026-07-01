@@ -5,7 +5,10 @@
  * BoardroomCXO profile  -> Claude generates a shortlist of 5 Indian leaders
  * Ketul profile         -> Tavily searches recent news, Claude filters + scores
  *
- * Returns: { options: [ { label, score, detail? } ] }
+ * Streams NDJSON progress events (searching/generating stages) followed by a
+ * terminal { stage: 'complete', result: { options } } event — same pattern
+ * as /api/generate, so the frontend progress bar tracks real work instead of
+ * a fixed-duration timer.
  */
 
 export async function onRequestPost(context) {
@@ -20,19 +23,37 @@ export async function onRequestPost(context) {
 
   const { profile } = body || {};
   if (!profile) return json({ error: 'profile required' }, 400);
+  if (profile !== 'boardroomcxo' && profile !== 'ketul') return json({ error: 'Unknown profile' }, 400);
 
-  if (profile === 'boardroomcxo') {
-    return runLeaderResearch(env);
-  } else if (profile === 'ketul') {
-    return runIndustryResearch(env);
-  }
+  const { readable, writable } = new TransformStream();
+  const writer = writable.getWriter();
+  const encoder = new TextEncoder();
+  const emit = (event) => writer.write(encoder.encode(JSON.stringify(event) + '\n'));
 
-  return json({ error: 'Unknown profile' }, 400);
+  const pipeline = (async () => {
+    try {
+      const result = profile === 'boardroomcxo'
+        ? await runLeaderResearch(env, emit)
+        : await runIndustryResearch(env, emit);
+      await emit({ stage: 'complete', result });
+    } catch (err) {
+      await emit({ stage: 'error', message: err.message });
+    } finally {
+      await writer.close();
+    }
+  })();
+
+  context.waitUntil(pipeline);
+
+  return new Response(readable, {
+    status: 200,
+    headers: { 'Content-Type': 'application/x-ndjson' },
+  });
 }
 
 /* ── LEADER SPOTLIGHT RESEARCH ───────────────────────────────── */
 
-async function runLeaderResearch(env) {
+async function runLeaderResearch(env, emit) {
   // Load exclusion list from DB
   let excluded = [];
   try {
@@ -103,19 +124,16 @@ OUTPUT FORMAT — return ONLY valid JSON, no markdown, no explanation:
 
 Return exactly 5 options, ranked by score descending.`;
 
-  try {
-    const response = await callClaude(env, systemPrompt, 'Generate the 5-leader shortlist now.');
-    const parsed = parseJSON(response);
-    if (!parsed?.options) throw new Error('No options in response');
-    return json({ options: parsed.options });
-  } catch (err) {
-    return json({ error: 'Research failed', detail: err.message }, 500);
-  }
+  const maxTokens = 2000;
+  const response = await callClaude(env, systemPrompt, 'Generate the 5-leader shortlist now.', maxTokens, (chars) => emit({ stage: 'generating', chars, max_tokens: maxTokens }));
+  const parsed = parseJSON(response);
+  if (!parsed?.options) throw new Error('No options in response');
+  return { options: parsed.options };
 }
 
 /* ── INDUSTRY NEWS RESEARCH ──────────────────────────────────── */
 
-async function runIndustryResearch(env) {
+async function runIndustryResearch(env, emit) {
   // Load previously used source URLs for deduplication
   let usedUrls = [];
   try {
@@ -140,13 +158,14 @@ async function runIndustryResearch(env) {
 
   let articles = [];
 
-  for (const query of searchQueries) {
+  for (let i = 0; i < searchQueries.length; i++) {
     try {
-      const results = await tavilySearch(env, query);
+      const results = await tavilySearch(env, searchQueries[i]);
       articles.push(...results);
     } catch {
       // skip failed queries
     }
+    await emit({ stage: 'searching', completed: i + 1, total: searchQueries.length });
   }
 
   // Deduplicate by URL
@@ -158,7 +177,7 @@ async function runIndustryResearch(env) {
   });
 
   if (articles.length === 0) {
-    return json({ error: 'No recent articles found. Try again in a few minutes or check your Tavily API key.' }, 500);
+    throw new Error('No recent articles found. Try again in a few minutes or check your Tavily API key.');
   }
 
   // Step 2: Claude filters and scores
@@ -215,19 +234,16 @@ OUTPUT FORMAT — return ONLY valid JSON, no markdown, no explanation:
 
 Return up to 5 options, ranked by score descending. If fewer than 5 pass all checks, return however many did.`;
 
-  try {
-    const response = await callClaude(env, systemPrompt, `Here are the articles to evaluate:\n\n${articlesBlock}`);
-    const parsed = parseJSON(response);
-    if (!parsed?.options) throw new Error('No options in response');
-    return json({ options: parsed.options });
-  } catch (err) {
-    return json({ error: 'Filtering failed', detail: err.message }, 500);
-  }
+  const maxTokens = 2000;
+  const response = await callClaude(env, systemPrompt, `Here are the articles to evaluate:\n\n${articlesBlock}`, maxTokens, (chars) => emit({ stage: 'generating', chars, max_tokens: maxTokens }));
+  const parsed = parseJSON(response);
+  if (!parsed?.options) throw new Error('No options in response');
+  return { options: parsed.options };
 }
 
 /* ── HELPERS ─────────────────────────────────────────────────── */
 
-async function callClaude(env, system, user) {
+async function callClaude(env, system, user, maxTokens = 2000, onProgress) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -237,9 +253,10 @@ async function callClaude(env, system, user) {
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 2000,
+      max_tokens: maxTokens,
       system,
       messages: [{ role: 'user', content: user }],
+      stream: true,
     }),
   });
 
@@ -248,8 +265,36 @@ async function callClaude(env, system, user) {
     throw new Error(`Claude API error ${res.status}: ${err}`);
   }
 
-  const data = await res.json();
-  return data.content?.[0]?.text || '';
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let text = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop();
+
+    for (const line of lines) {
+      if (!line.startsWith('data:')) continue;
+      const payload = line.slice(5).trim();
+      if (!payload) continue;
+
+      let evt;
+      try { evt = JSON.parse(payload); } catch { continue; }
+
+      if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+        text += evt.delta.text;
+        if (onProgress) await onProgress(text.length);
+      } else if (evt.type === 'error') {
+        throw new Error(evt.error?.message || 'Claude streaming error');
+      }
+    }
+  }
+
+  return text;
 }
 
 async function tavilySearch(env, query) {
