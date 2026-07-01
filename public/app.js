@@ -1489,11 +1489,11 @@ async function runImagePipeline(personFile, allFiles, headline, accentWord, subj
     }
   } else {
     for (let i = 0; i < steps.length; i++) {
-      setStepActive(i, steps.length);
+      setStepActive(progressCard, i, steps.length);
       await delay(1000 + Math.random() * 500);
-      setStepDone(i, steps.length);
+      setStepDone(progressCard, i, steps.length);
     }
-    finishProgress();
+    finishProgress(progressCard);
 
     renderImageResult({
       image_url: null,
