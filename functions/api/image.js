@@ -95,13 +95,16 @@ export async function onRequestPost(context) {
     // Stage 1: Analyse reference photo with GPT-4o Vision
     const subjectDescription = await analysePhoto(env, photoBase64, photoMime);
 
+    // Load the custom image prompt from DB settings, or use the bundled default
+    const customInstructions = await loadSetting(env, 'prompt_image');
+
     // Up to 3 generation attempts
     let bestResult = null;
     let bestScore = 0;
 
     for (let attempt = 1; attempt <= 3; attempt++) {
       // Stage 2: Build DALL-E prompt and generate image
-      const dallePrompt = buildDallePrompt(subjectDescription, headline, accentWord, subjectLine, attempt, bestResult?.qualityReport);
+      const dallePrompt = buildDallePrompt(customInstructions, subjectDescription, headline, accentWord, subjectLine, attempt, bestResult?.qualityReport);
       const imageB64 = await generateImage(env, dallePrompt);
 
       // Stage 3: Quality check with GPT-4o Vision
