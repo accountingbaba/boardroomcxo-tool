@@ -427,18 +427,31 @@ function showOptions(header, items, onSelect, onShowMore) {
     <div class="options-card">
       <div class="options-header">${header}</div>
       ${rowsHtml}
+      ${onShowMore ? `<button class="show-more-btn" id="show-more-btn">Show me more options</button>` : ''}
     </div>`;
   area.appendChild(card);
 
   card.querySelectorAll('.option-row').forEach(row => {
     row.addEventListener('click', () => {
       card.querySelectorAll('.option-row').forEach(r => r.style.pointerEvents = 'none');
+      const btn = card.querySelector('#show-more-btn');
+      if (btn) btn.disabled = true;
       const idx = parseInt(row.dataset.idx);
       row.style.background = '#EEF1F7';
       row.style.borderColor = '#1B2B4B';
       onSelect(idx, items[idx]);
     });
   });
+
+  if (onShowMore) {
+    const btn = card.querySelector('#show-more-btn');
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      btn.textContent = 'Searching for more...';
+      card.querySelectorAll('.option-row').forEach(r => r.style.pointerEvents = 'none');
+      await onShowMore();
+    });
+  }
 
   scrollChat();
 }
