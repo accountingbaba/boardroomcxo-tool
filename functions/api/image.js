@@ -44,7 +44,7 @@ MANDATORY SUBJECT RENDERING RULES — applies independently to every subject in 
 - Natural facial asymmetry — human faces are not symmetrical, do not symmetrise
 - No skin smoothing of any kind. No AI beautification. No idealisation of any feature. Applies to every subject, no averaging or leniency because more than one is in frame.
 - The face must look like a real photograph of this specific person — photorealistic, not rendered, not illustrated
-- Professional standing pose, face(s) toward camera unless the reference photo shows otherwise
+- Reproduce the exact pose, posture, body angle, and framing scale from the reference photo — do not repose the subject, do not change their stance, do not make a headshot into a standing full-body shot or vice versa, do not zoom in or out relative to how they appear in the reference photo
 
 LIGHTING AND SHADOW:
 - One dominant directional studio light, soft and natural, coming from slightly above and to one side
