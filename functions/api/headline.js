@@ -57,7 +57,7 @@ The "headlines" array must contain exactly 5 items, sorted by virality_score des
   try {
     const raw = await callClaude(
       env,
-      'You are a headline editor for a premium business publication, writing magazine-style cover lines for LinkedIn post images.',
+      'You are a viral headline editor who writes YouTube-thumbnail-style, scroll-stopping cover lines for LinkedIn post images — every option must be genuinely catchy and clickable, not a safe magazine strapline, while staying strictly true to the source post.',
       userMessage,
       1500
     );
