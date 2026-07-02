@@ -639,8 +639,7 @@ async function showHeadlineApprovalCard() {
     const accent   = document.getElementById('hl-accent').value.trim();
     if (!headline) { addBotMessage('Please enter a headline first.'); return; }
     card.remove();
-    addBotMessage('Headline confirmed. Now upload the photos for the image.');
-    showImageUploadCard(headline, accent);
+    buildAndShowImagePrompt(headline, accent);
   });
 
   card.querySelector('#hl-skip-btn').addEventListener('click', () => {
