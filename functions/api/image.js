@@ -75,9 +75,9 @@ function buildImagePrompt(customInstructions, headline, accentWord, profile) {
   const instructions = (customInstructions && customInstructions.trim()) || DEFAULT_IMAGE_INSTRUCTIONS;
   const footerTag = FOOTER_TAG_BY_PROFILE[profile] || FOOTER_TAG_BY_PROFILE.boardroomcxo;
 
-  return `TEXT TO RENDER ONTO THE IMAGE — satisfy this first, it is the single most important requirement: in the bottom 20-22% of the frame, over a natural dark fade (not a coloured panel), render this exact text as real typography baked into the picture — not described in words, not left blank:
-- Headline, large and bold, white with "${accentWord}" in orange (#FF6B00), one line only — shrink the font to fit rather than wrapping or dropping it: "${headline}"
-- Below it, small and muted (white, ~65% opacity): "${footerTag}"
+  return `TEXT TO RENDER ONTO THE IMAGE — satisfy this first, it is the single most important requirement: in the bottom 20-22% of the frame, over a natural dark fade (not a coloured panel), render this exact text as real typography baked into the picture — not described in words, not left blank. Use Inter Bold (clean geometric sans-serif, tight letter spacing) for both lines:
+- Headline, Inter Bold, large and dominant, white with "${accentWord}" in orange (#FF6B00), one line only — shrink the font to fit rather than wrapping or dropping it: "${headline}"
+- Below it, Inter Bold at a much smaller size, muted (white, ~65% opacity): "${footerTag}"
 
 ${instructions}
 
