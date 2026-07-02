@@ -841,6 +841,13 @@ async function runLeaderSpotlightFlow(alreadyShown = []) {
     ];
   }
 
+  if (!options || options.length === 0) {
+    chatState = 'idle';
+    document.getElementById('brew-btn').disabled = false;
+    addBotMessage('No leaders came back from this search. Please try again.');
+    return;
+  }
+
   const shownNow = [...alreadyShown, ...options.map(o => o.name || o.label.split(' — ')[0])];
   addBotMessage(alreadyShown.length ? 'Here are 5 more leaders.' : 'Here are your top 5 leaders for this session. Click one to generate the post.');
   showOptions('Select a leader', options, onLeaderSelected, () => runLeaderSpotlightFlow(shownNow));
