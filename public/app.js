@@ -370,7 +370,8 @@ function clearProgressReassure(card) {
 // used by callers when a fetch's AbortError bubbles up from a Stop click.
 function markProgressCancelled(card) {
   clearProgressReassure(card);
-  card.classList.add('cancelled');
+  const inner = card.querySelector('#progress-card');
+  if (inner) inner.classList.add('cancelled');
   const hint = card.querySelector('#progress-hint');
   if (hint) hint.textContent = 'Stopped — no changes were made.';
   const stopBtn = card.querySelector('#progress-stop-btn');
