@@ -139,11 +139,18 @@ function buildImagePrompt(customInstructions, headline, accentWord, profile) {
   const instructions = (customInstructions && customInstructions.trim()) || DEFAULT_IMAGE_INSTRUCTIONS;
   const footerTag = FOOTER_TAG_BY_PROFILE[profile] || FOOTER_TAG_BY_PROFILE.boardroomcxo;
 
-  return `${instructions}
+  const textOverlaySpec = `- Line 1 (large, dominant, Inter ExtraBold or Montserrat ExtraBold): "${headline}" — the word "${accentWord}" in bold orange (#FF6B00), all other text in white. This must render as ONE single line — no wrapping, no second line, no subline of any kind.
+- Line 2 (same font family, Light weight, very small, white at 60-70% opacity): "${footerTag}"`;
 
-TEXT OVERLAY CONTENT — bottom 20-22% of image:
-- Line 1 (large, dominant, Inter ExtraBold or Montserrat ExtraBold): "${headline}" — the word "${accentWord}" in bold orange (#FF6B00), all other text in white. This must render as ONE single line — no wrapping, no second line, no subline of any kind.
-- Line 2 (same font family, Light weight, very small, white at 60-70% opacity): "${footerTag}"
+  return `MANDATORY TEXT TO RENDER ONTO THE IMAGE — read this before anything else below, it is the single most important requirement in this prompt:
+This image is incomplete and must not be delivered without this exact text physically rendered as real typography in the bottom 20-22% of the frame, baked directly into the picture (not described in words, not left blank, not replaced with a placeholder):
+${textOverlaySpec}
+If the headline text is long, shrink the font size to fit it on one line rather than wrapping it, dropping it, or omitting it.
+
+${instructions}
+
+TEXT OVERLAY CONTENT — bottom 20-22% of image (repeated here for emphasis — same requirement as above):
+${textOverlaySpec}
 
 GENERATION DIRECTIVE — read this before generating, it overrides anything ambiguous above:
 - Render the exact Line 1 and Line 2 text above directly onto the image now, as real rendered typography baked into the picture. Do not omit the text, do not describe it in words instead of drawing it, and do not stop to ask a clarifying question — generate the image.
