@@ -1121,6 +1121,7 @@ async function runRepurpose(profile, postText, postId) {
         method: 'POST',
         headers: apiHeaders(),
         body: JSON.stringify({ profile, post_text: postText, post_id: postId }),
+        signal: progressCard._controller.signal,
       });
       clearInterval(tickInterval);
       if (!res.ok) throw new Error(await res.text());
@@ -1131,6 +1132,7 @@ async function runRepurpose(profile, postText, postId) {
     } catch (err) {
       clearInterval(tickInterval);
       chatState = 'done';
+      if (err.name === 'AbortError') { markProgressCancelled(progressCard); return; }
       addBotMessage(`Repurposing failed: ${err.message}. Please try again.`);
     }
   } else {
@@ -1138,6 +1140,11 @@ async function runRepurpose(profile, postText, postId) {
       setStepActive(progressCard, i, steps.length);
       await delay(800 + Math.random() * 400);
       setStepDone(progressCard, i, steps.length);
+    }
+    if (progressCard._controller.signal.aborted) {
+      markProgressCancelled(progressCard);
+      chatState = 'done';
+      return;
     }
     finishProgress(progressCard);
 
