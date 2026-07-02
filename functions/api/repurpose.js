@@ -90,11 +90,11 @@ Return ONLY valid JSON in this exact structure. No markdown fences outside the J
 
 {
   "instagram": {
-    "caption": "full Instagram caption text including ... and closing line",
-    "hashtags": "#LeaderSpotlight #BoardroomCXO ... (10 total as a string)"
+    "caption": "opener through the follow line (steps 1-7 of the locked structure), not including hashtags",
+    "hashtags": "the 10 hashtags from step 8, space-separated, as a single string"
   },
   "whatsapp": {
-    "message": "full WhatsApp message with *bold* and - bullet formatting"
+    "message": "full WhatsApp message: title line through the closing line (steps 1-5 of the locked structure), *bold* and - bullet formatting, no hashtags"
   },
   "blog": {
     "seo_title": "",
