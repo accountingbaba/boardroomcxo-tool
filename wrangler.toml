@@ -13,5 +13,4 @@ ENVIRONMENT = "production"
 # Secrets — set these via: wrangler secret put SECRET_NAME
 # ACCESS_PASSPHRASE   — the shared password your team uses to log in
 # ANTHROPIC_API_KEY   — your Claude API key
-# OPENAI_API_KEY      — your OpenAI API key (for GPT-4o and DALL-E 3)
 # TAVILY_API_KEY      — your Tavily search API key
