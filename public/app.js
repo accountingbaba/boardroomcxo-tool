@@ -324,6 +324,7 @@ function showProgress(title, steps) {
       <div class="progress-title">
         <span class="progress-live-dot"></span>
         ${title}
+        <button class="progress-stop-btn" id="progress-stop-btn" type="button"><i class="ti ti-player-stop-filled"></i>Stop</button>
       </div>
       <div class="progress-working-hint" id="progress-hint">Working in the background — this takes 15 to 30 seconds...</div>
       <div class="progress-bar-wrap">
@@ -342,11 +343,38 @@ function showProgress(title, steps) {
   }, 10000);
   card._reassureTimer = reassureTimer;
 
+  // Lets the caller interrupt an in-flight fetch (see readNdjsonStream call
+  // sites, which pass card._controller.signal). Clicking Stop aborts the
+  // request; callers detect err.name === 'AbortError' and call
+  // markProgressCancelled() instead of showing a generic failure message.
+  const controller = new AbortController();
+  card._controller = controller;
+  const stopBtn = card.querySelector('#progress-stop-btn');
+  stopBtn.addEventListener('click', () => {
+    if (controller.signal.aborted) return;
+    stopBtn.disabled = true;
+    stopBtn.innerHTML = '<i class="ti ti-loader-2 spin"></i>Stopping...';
+    const hint = card.querySelector('#progress-hint');
+    if (hint) hint.textContent = 'Stopping...';
+    controller.abort();
+  });
+
   return card;
 }
 
 function clearProgressReassure(card) {
   if (card && card._reassureTimer) clearTimeout(card._reassureTimer);
+}
+
+// Puts a progress card into its terminal "user stopped this" visual state —
+// used by callers when a fetch's AbortError bubbles up from a Stop click.
+function markProgressCancelled(card) {
+  clearProgressReassure(card);
+  card.classList.add('cancelled');
+  const hint = card.querySelector('#progress-hint');
+  if (hint) hint.textContent = 'Stopped — no changes were made.';
+  const stopBtn = card.querySelector('#progress-stop-btn');
+  if (stopBtn) stopBtn.remove();
 }
 
 // NOTE: every lookup below is scoped to the specific `card` element returned
