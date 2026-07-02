@@ -739,11 +739,11 @@ function demoHeadlineOptions(postText) {
     .sort((a, b) => b.length - a.length)[0] || words[words.length - 1] || 'different';
 
   return [
-    { headline: hook, accent_word: accentCandidate, virality_score: 86, virality_note: 'Opens with the post\'s own hook line — highest recall' },
-    { headline: 'The move nobody saw coming', accent_word: 'nobody', virality_score: 79, virality_note: 'Curiosity gap — strong scroll-stop power' },
-    { headline: 'One decision. A category redefined.', accent_word: 'redefined', virality_score: 74, virality_note: 'Short, declarative, magazine-cover rhythm' },
-    { headline: 'She built what nobody believed in', accent_word: 'believed', virality_score: 70, virality_note: 'Emotional resonance, but less specific to this post' },
-    { headline: 'The bet that rewrote the rules', accent_word: 'rewrote', virality_score: 65, virality_note: 'Familiar phrasing — lower novelty' },
+    { headline: hook, accent_word: accentCandidate, virality_score: 88, virality_note: 'Opens with the post\'s own hook line — highest recall' },
+    { headline: 'Nobody saw this move coming', accent_word: 'Nobody', virality_score: 85, virality_note: 'Curiosity gap — strong scroll-stop power' },
+    { headline: 'This one decision changed everything', accent_word: 'everything', virality_score: 82, virality_note: 'Bold claim, magazine-cover rhythm, high click intent' },
+    { headline: 'What she did nobody believed', accent_word: 'nobody', virality_score: 78, virality_note: 'Emotional contrast hook — reveal-driven' },
+    { headline: 'The bet that broke every rule', accent_word: 'broke', virality_score: 74, virality_note: 'Stark contrast framing, still true to the post' },
   ];
 }
 
