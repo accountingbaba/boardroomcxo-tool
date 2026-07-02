@@ -205,7 +205,7 @@ Virality Score: [X/100] — [one line stating the strongest factor and one line 
 
 - Do not hallucinate URLs. If uncertain whether a link is live and real, exclude it.
 - Do not infer articles exist. Only include content actually retrieved or confirmed via search results.
-- Double-check every date. If the publication date cannot be confirmed within the 7 to 15 day window, exclude the piece.
+- Double-check every date. If the publication date cannot be confirmed within the 25 day window, exclude the piece.
 - Do not reframe a rejected type to make it fit — an endorsement is not Type 1 because the celebrity "loves the brand."
 - Accuracy over volume. Six verified, correctly dated, genuinely relevant articles beat ten padded or uncertain ones.
 - Never ask for re-explanation of this schema mid-workflow. If the brief is ambiguous, make a reasonable interpretation, state it in one line, and proceed.
