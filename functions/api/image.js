@@ -8,16 +8,16 @@
  *   profile     — 'boardroomcxo' | 'ketul' — selects the footer tag line
  *   post_id     — (optional) DB post ID to link the prompt to
  *
- * This endpoint does not generate an image. Calling an image-generation API
- * here costs money per image; instead it runs a single GPT-4o Vision pass
- * over the reference photo to extract a precise ground-truth description,
- * then assembles that into a ChatGPT-ready image prompt. The user copies the
- * prompt and pastes it into ChatGPT themselves, alongside the same reference
- * photo(s) and any brand logo file(s), and generates the image there.
+ * This endpoint does not generate an image and does not call OpenAI. It runs
+ * a single Claude Vision pass over the reference photo to extract a precise
+ * ground-truth description, then assembles that into a ChatGPT-ready image
+ * prompt. The user copies the prompt and pastes it into ChatGPT themselves,
+ * alongside the same reference photo(s) and any brand logo file(s), and
+ * generates the image there.
  *
  * Returns: {
  *   image_prompt,        — the ChatGPT-ready prompt text
- *   subject_description, — GPT-4o Vision extracted ground-truth description
+ *   subject_description, — Claude Vision extracted ground-truth description
  *   limitations_notice   — string
  * }
  */
