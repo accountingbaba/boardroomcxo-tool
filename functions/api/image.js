@@ -119,7 +119,7 @@ export async function onRequestPost(context) {
   if (!photoFile) return json({ error: 'Reference photo required' }, 400);
   if (!headline) return json({ error: 'Headline text required' }, 400);
 
-  // Convert uploaded file to base64 for GPT-4o Vision
+  // Convert uploaded file to base64 for Claude Vision
   const photoBuffer = await photoFile.arrayBuffer();
   const photoBase64 = arrayBufferToBase64(photoBuffer);
   const photoMime = photoFile.type || 'image/jpeg';
