@@ -953,6 +953,13 @@ async function runIndustryNewsFlow(alreadyShown = []) {
     ];
   }
 
+  if (!options || options.length === 0) {
+    chatState = 'idle';
+    document.getElementById('brew-btn').disabled = false;
+    addBotMessage(`No stories from the last ${freshnessDays} days passed the quality filters. Try widening the freshness window in Settings, or check back later.`);
+    return;
+  }
+
   const shownNow = [...alreadyShown, ...options.map(o => o.url).filter(Boolean)];
   addBotMessage(alreadyShown.length ? `Here are 5 more stories from the last ${freshnessDays} days.` : `Here are 5 verified articles from the last ${freshnessDays} days. Click one to generate the post.`);
   showOptions('Select a story', options, onStorySelected, () => runIndustryNewsFlow(shownNow));
