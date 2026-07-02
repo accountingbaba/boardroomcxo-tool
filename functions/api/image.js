@@ -29,7 +29,9 @@ SUBJECT RENDERING: Natural imperfect skin (visible pores, subtle asymmetry, no s
 
 BACKGROUND: Deep charcoal-to-warm-grey gradient, darker at the edges, soft natural bokeh, no textures, patterns, or props.
 
-LOGOS: Use only the attached logo file(s), pixel-accurate, never redrawn or recoloured. Strip away any background panel/box from the logo file itself and place the mark directly on the image's own dark background, blended cleanly with no visible rectangle or colour card. The featured brand's logo(s) sit in the right mid-frame as the dominant mark; the BoardroomCXO watermark stays small and subtle in a corner. If a logo can't be extracted cleanly, leave an empty placeholder zone rather than forcing a hard edge. If no logo applies, leave the zone empty.
+LOGOS: Use only the attached logo file(s), pixel-accurate, never redrawn or recoloured. Strip away any background panel/box from the logo file itself and place the mark directly on the image's own dark background, blended cleanly with no visible rectangle or colour card. If a logo can't be extracted cleanly, leave an empty placeholder zone rather than forcing a hard edge. If no logo applies, leave the zone empty.
+- Featured brand logo(s) — the story's actual subject — go in the right mid-frame as the dominant mark: clearly the largest and most prominent logo in the image.
+- BoardroomCXO logo — small credit-only branding, top-right corner ONLY, roughly a third the size (or smaller) of the featured brand logo. It must read as a discreet watermark, never a co-branding lockup, never equal in size or visual weight to the featured brand's logo, and never placed anywhere but the top-right corner.
 
 OVERALL FEEL: Real, human, credible, authoritative — shot by a professional editorial photographer, not AI-generated, not a corporate or recruitment graphic.`;
 
