@@ -191,13 +191,18 @@ async function runIndustryResearch(env, emit, alreadyShown = [], maxAgeDays = 25
   }
 
   // Step 2: Claude filters and scores
+  const todayStr = new Date().toISOString().slice(0, 10);
   const articlesBlock = articles.slice(0, 30).map((a, i) =>
-    `[${i + 1}] Title: ${a.title}\nURL: ${a.url}\nSource: ${a.url ? new URL(a.url).hostname : 'unknown'}\nSnippet: ${a.content || a.snippet || ''}`
+    `[${i + 1}] Title: ${a.title}\nURL: ${a.url}\nSource: ${a.url ? new URL(a.url).hostname : 'unknown'}\nPublished: ${a.published_date || 'unknown'}\nSnippet: ${a.content || a.snippet || ''}`
   ).join('\n\n---\n\n');
 
   const systemPrompt = `You are a content intelligence researcher for CA Ketul Patel's personal LinkedIn profile.
 
+Today's date is ${todayStr}.
+
 Your task: From the articles below, select the best 5 for LinkedIn post source material. Apply all filters strictly.
+
+RECENCY — NON-NEGOTIABLE: Only select articles published within the last ${maxAgeDays} days of today's date. If an article's published date cannot be confirmed, or falls outside this window, reject it — do not guess a date.
 
 MANDATORY SIGNALS — all 4 must be present in every accepted article:
 1. Named brand (specific, not generic)
