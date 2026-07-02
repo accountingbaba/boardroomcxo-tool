@@ -35,7 +35,7 @@ Jewellery · Fashion · D2C · Luxury (watches, accessories, perfumes, bags and 
 
 ## RECENCY REQUIREMENT — NON-NEGOTIABLE
 
-Only surface content published or posted in the last 7 to 15 days from today's date.
+Only surface content published or posted in the last 25 days from today's date.
 
 Do not include anything older. Always state the exact publication or post date in your output. If you cannot confirm the exact date, do not include the article.
 
