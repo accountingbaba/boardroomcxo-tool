@@ -21,10 +21,11 @@ export async function onRequestPost(context) {
     return json({ error: 'Invalid JSON' }, 400);
   }
 
-  const { profile, already_shown } = body || {};
+  const { profile, already_shown, max_age_days } = body || {};
   if (!profile) return json({ error: 'profile required' }, 400);
   if (profile !== 'boardroomcxo' && profile !== 'ketul') return json({ error: 'Unknown profile' }, 400);
   const alreadyShown = Array.isArray(already_shown) ? already_shown : [];
+  const maxAgeDays = Number.isFinite(max_age_days) && max_age_days > 0 ? Math.min(max_age_days, 25) : 25;
 
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();
