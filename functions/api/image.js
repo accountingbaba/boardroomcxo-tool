@@ -24,7 +24,9 @@ const DEFAULT_IMAGE_INSTRUCTIONS = `This image must be built using the attached 
 Photorealistic editorial portrait photograph. 4:5 portrait format. LinkedIn social media post image. Aesthetic target: The Ken meets Fortune India meets Bloomberg Businessweek — premium, understated, authoritative. Never a recruitment-post or corporate-graphic look. No decorative fills, no background elements, no creative liberties — everything in frame must have a reason.
 
 COMPOSITION — single subject:
-- Centred or slightly left of centre, three-quarter body visible, from mid-shin upward
+- Centred or slightly left of centre
+- Reproduce the subject exactly as framed in the reference photo — same pose, same stance, same head angle, same crop/zoom level, same amount of body visible. If the reference is a headshot, deliver a headshot; if it is three-quarter body, keep it three-quarter body. Never restage the person into a different pose, never invent unseen body parts, never zoom in or out relative to the reference photo
+- Extend only the background and setting around the subject as needed — never the subject's own body or pose
 - Clean negative space on the right mid-frame reserved for logo placement
 
 COMPOSITION — multiple subjects (when more than one reference photo is provided):
