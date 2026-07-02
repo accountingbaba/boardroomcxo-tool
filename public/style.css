@@ -80,10 +80,17 @@ button, input, textarea { font-family: inherit; }
 /* OPTIONS CARD */
 .options-card { display: flex; flex-direction: column; gap: 6px; max-width: 90%; }
 .options-header { font-size: 9px; font-weight: 600; letter-spacing: 1px; color: #bbb; text-transform: uppercase; margin-bottom: 2px; }
-.option-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 13px; border-radius: 7px; border: 1px solid #e8e8e8; background: #fff; cursor: pointer; gap: 10px; transition: border-color 0.15s, background 0.15s; }
+.option-row { display: flex; flex-direction: column; padding: 10px 13px; border-radius: 7px; border: 1px solid #e8e8e8; background: #fff; cursor: pointer; gap: 6px; transition: border-color 0.15s, background 0.15s; }
 .option-row:hover { border-color: #1B2B4B; background: #f7f9fc; }
+.option-row-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .option-name { font-size: 12px; color: #1a1a1a; line-height: 1.4; }
 .option-score { font-size: 11px; font-weight: 600; color: #1B2B4B; background: #EEF1F7; padding: 3px 9px; border-radius: 5px; white-space: nowrap; flex-shrink: 0; }
+.option-meta { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: #999; flex-wrap: wrap; }
+.option-meta-date { white-space: nowrap; }
+.option-meta-source { white-space: nowrap; }
+.option-meta-dot { color: #ccc; }
+.option-meta-link { color: #1B2B4B; text-decoration: underline; white-space: nowrap; }
+.option-meta-link:hover { color: #3a5fd9; }
 .show-more-btn { font-size: 11px; font-weight: 600; color: #1B2B4B; background: none; border: 1px dashed #c8cfdd; border-radius: 7px; padding: 9px 13px; cursor: pointer; margin-top: 2px; transition: border-color 0.15s, background 0.15s; }
 .show-more-btn:hover:not(:disabled) { border-color: #1B2B4B; background: #f7f9fc; }
 .show-more-btn:disabled { opacity: 0.6; cursor: default; }
