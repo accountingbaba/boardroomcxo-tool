@@ -791,6 +791,7 @@ async function runLeaderSpotlightFlow(alreadyShown = []) {
         method: 'POST',
         headers: apiHeaders(),
         body: JSON.stringify({ profile: 'boardroomcxo', already_shown: alreadyShown }),
+        signal: progressCard._controller.signal,
       });
       if (!res.ok) throw new Error(await res.text());
       // Real progress: the backend streams NDJSON events as Claude generates
@@ -806,6 +807,7 @@ async function runLeaderSpotlightFlow(alreadyShown = []) {
     } catch (err) {
       chatState = 'idle';
       document.getElementById('brew-btn').disabled = false;
+      if (err.name === 'AbortError') { markProgressCancelled(progressCard); return; }
       addBotMessage(`Research failed: ${err.message}. Please try again.`);
       return;
     }
@@ -816,7 +818,14 @@ async function runLeaderSpotlightFlow(alreadyShown = []) {
     await delay(600); setStepDone(progressCard, 1, steps.length); setStepActive(progressCard, 2, steps.length);
     await delay(900); setStepDone(progressCard, 2, steps.length); setStepActive(progressCard, 3, steps.length);
     await delay(700); setStepDone(progressCard, 3, steps.length); setStepActive(progressCard, 4, steps.length);
-    await delay(400); setStepDone(progressCard, 4, steps.length); finishProgress(progressCard);
+    await delay(400); setStepDone(progressCard, 4, steps.length);
+    if (progressCard._controller.signal.aborted) {
+      markProgressCancelled(progressCard);
+      chatState = 'idle';
+      document.getElementById('brew-btn').disabled = false;
+      return;
+    }
+    finishProgress(progressCard);
     options = alreadyShown.length ? LEADER_DEMO_BATCH_2 : [
       { label: 'Madhabi Puri Buch — SEBI Chairperson, capital markets reform', score: 88 },
       { label: 'Peyush Bansal — Lenskart, D2C vision to global retail', score: 84 },
