@@ -418,12 +418,17 @@ function setStepDone(card, index, total) {
 }
 
 function finishProgress(card) {
+  clearProgressReassure(card);
   const bar = card.querySelector('#progress-bar');
   const pctEl = card.querySelector('#progress-pct');
   if (bar) bar.style.width = '100%';
   if (pctEl) pctEl.textContent = '100%';
   const hint = card.querySelector('#progress-hint');
   if (hint) hint.textContent = 'Done.';
+  // The work is finished — a Stop click past this point can't cancel
+  // anything, so drop the button rather than leave it clickable/stuck.
+  const stopBtn = card.querySelector('#progress-stop-btn');
+  if (stopBtn) stopBtn.remove();
 }
 
 // Sets the bar to an exact percentage, independent of step index — used when
