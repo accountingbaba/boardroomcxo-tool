@@ -131,7 +131,7 @@ export async function onRequestPost(context) {
 
   const pipeline = (async () => {
     try {
-      // Stage 1: Analyse reference photo with GPT-4o Vision
+      // Stage 1: Analyse reference photo with Claude Vision
       await emit({ stage: 'analyse_photo', status: 'start' });
       const subjectDescription = await analysePhoto(env, photoBase64, photoMime);
       await emit({ stage: 'analyse_photo', status: 'done' });
