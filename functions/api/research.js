@@ -170,7 +170,7 @@ async function runIndustryResearch(env, emit, alreadyShown = [], maxAgeDays = 25
 
   for (let i = 0; i < searchQueries.length; i++) {
     try {
-      const results = await tavilySearch(env, searchQueries[i]);
+      const results = await tavilySearch(env, searchQueries[i], maxAgeDays);
       articles.push(...results);
     } catch {
       // skip failed queries
