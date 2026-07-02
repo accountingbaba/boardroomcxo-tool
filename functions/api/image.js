@@ -88,10 +88,12 @@ OVERALL FEEL:
 - Photorealistic, not illustrated, not rendered, not AI-looking
 - No flat lighting. No over-processed look. No glowing edges. No hyper-sharpened outlines. No plastic skin. No AI artifacts.
 
-SELF-CHECK BEFORE DELIVERING — regenerate if any fail:
+SELF-CHECK BEFORE DELIVERING — apply silently, then regenerate internally if any fail. Never show this checklist, a list of numbered issues, or any text-only explanation to the user in place of the image — always deliver the best-effort image itself:
 - Every face matches its reference photo exactly, with no distorted or altered features
 - No face looks AI-generated, over-smoothed, over-symmetrical, or "too perfect"
 - Every subject, if more than one, is reproduced with full individual accuracy — none simplified or generalised because others are present
+- Every subject's pose, posture, and framing scale matches their reference photo exactly — nobody has been repositioned, restaged, re-cropped, or resized relative to their reference photo
+- The exact headline and footer text specified below has been rendered directly onto the image, as a single line, with no text omitted or replaced with a placeholder
 - A subtle natural shadow is visible behind the subject(s), adding depth
 - Every logo used is pixel-accurate to the file provided, correctly aligned, evenly sized or intentionally hierarchised for a clear story reason, and never appears as a hard-edged rectangular block against the background
 - Any transparent-background logo sits directly on the existing dark background with no extra panel or card added
