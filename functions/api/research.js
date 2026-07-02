@@ -191,27 +191,62 @@ async function runIndustryResearch(env, emit, alreadyShown = [], maxAgeDays = 25
     throw new Error('No recent articles found. Try again in a few minutes or check your Tavily API key.');
   }
 
-  // Step 2: Claude filters and scores
-  const todayStr = new Date().toISOString().slice(0, 10);
+  // Step 2: Claude filters and scores — strict pass first, then a relaxed
+  // retry over the same articles if nothing survives. Trade press headlines
+  // often omit a named decision-maker even when the brand/action/India-nexus
+  // signals are solid, so a single strict pass regularly returns zero on
+  // ordinary news days.
   const articlesBlock = articles.slice(0, 30).map((a, i) =>
     `[${i + 1}] Title: ${a.title}\nURL: ${a.url}\nSource: ${a.url ? new URL(a.url).hostname : 'unknown'}\nPublished: ${a.published_date || 'unknown'}\nSnippet: ${a.content || a.snippet || ''}`
   ).join('\n\n---\n\n');
+
+  const maxTokens = 2000;
+
+  let options = await scoreArticles(env, articlesBlock, maxAgeDays, maxTokens, false, emit);
+  if (options.length === 0) {
+    options = await scoreArticles(env, articlesBlock, maxAgeDays, maxTokens, true, emit);
+  }
+
+  if (options.length === 0) {
+    throw new Error(
+      `Found ${articles.length} article(s) from the last ${maxAgeDays} days, but none passed the quality filters ` +
+      `(named brand + concrete action + India nexus, matching one of the 7 story types) even on a relaxed pass. ` +
+      `Try widening the freshness window in Settings, or check back later for fresh coverage.`
+    );
+  }
+  return { options };
+}
+
+async function scoreArticles(env, articlesBlock, maxAgeDays, maxTokens, relaxed, emit) {
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  const signalsBlock = relaxed
+    ? `MANDATORY SIGNALS — at least 3 of these 4 must be present (a named decision-maker is a bonus, not required):
+1. Named brand (specific, not generic)
+2. Named person in a decision role (founder, CEO, CMO, investor, creative director) — nice to have
+3. Concrete action (something that has happened or been officially announced — not a prediction or rumour)
+4. India nexus (happens in India, involves an Indian brand, or involves an Indian brand going international)`
+    : `MANDATORY SIGNALS — all 4 must be present in every accepted article:
+1. Named brand (specific, not generic)
+2. Named person in a decision role (founder, CEO, CMO, investor, creative director)
+3. Concrete action (something that has happened or been officially announced — not a prediction or rumour)
+4. India nexus (happens in India, involves an Indian brand, or involves an Indian brand going international)`;
+
+  const storyTypesBlock = relaxed
+    ? `THE 7 STORY TYPES — article should reasonably relate to at least one (a loose match is fine on this pass):`
+    : `THE 7 STORY TYPES — article must match at least one:`;
 
   const systemPrompt = `You are a content intelligence researcher for CA Ketul Patel's personal LinkedIn profile.
 
 Today's date is ${todayStr}.
 
-Your task: From the articles below, select the best 5 for LinkedIn post source material. Apply all filters strictly.
+Your task: From the articles below, select the best 5 for LinkedIn post source material.${relaxed ? ' This is a second, relaxed pass — the strict pass returned nothing, so favor including a reasonable story over rejecting everything, while still respecting the hard exclusions below.' : ' Apply all filters strictly.'}
 
 RECENCY — NON-NEGOTIABLE: Only select articles published within the last ${maxAgeDays} days of today's date. If an article's published date cannot be confirmed, or falls outside this window, reject it — do not guess a date.
 
-MANDATORY SIGNALS — all 4 must be present in every accepted article:
-1. Named brand (specific, not generic)
-2. Named person in a decision role (founder, CEO, CMO, investor, creative director)
-3. Concrete action (something that has happened or been officially announced — not a prediction or rumour)
-4. India nexus (happens in India, involves an Indian brand, or involves an Indian brand going international)
+${signalsBlock}
 
-THE 7 STORY TYPES — article must match at least one:
+${storyTypesBlock}
 1. Celebrity or creator turning brand owner (with equity/creative stake — not just an ambassador)
 2. Brand x brand or brand x IP collaboration with a real product output in India
 3. Global luxury or premium brand entering or expanding significantly in India
@@ -251,18 +286,10 @@ OUTPUT FORMAT — return ONLY valid JSON, no markdown, no explanation:
 
 Return up to 5 options, ranked by score descending. If fewer than 5 pass all checks, return however many did. Every option must include a confirmed "date_published" within the last ${maxAgeDays} days.`;
 
-  const maxTokens = 2000;
   const response = await callClaude(env, systemPrompt, `Here are the articles to evaluate:\n\n${articlesBlock}`, maxTokens, (chars) => emit({ stage: 'generating', chars, max_tokens: maxTokens }));
   const parsed = parseJSON(response);
   if (!parsed?.options) throw new Error('No options in response');
-  if (parsed.options.length === 0) {
-    throw new Error(
-      `Found ${articles.length} article(s) from the last ${maxAgeDays} days, but none passed the quality filters ` +
-      `(named brand + named person + concrete action + India nexus, matching one of the 7 story types). ` +
-      `Try widening the freshness window in Settings, or check back later for fresh coverage.`
-    );
-  }
-  return { options: parsed.options };
+  return parsed.options;
 }
 
 /* ── HELPERS ─────────────────────────────────────────────────── */
