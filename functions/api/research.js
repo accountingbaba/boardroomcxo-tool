@@ -139,7 +139,7 @@ Return exactly 5 options, ranked by score descending.`;
 
 /* ── INDUSTRY NEWS RESEARCH ──────────────────────────────────── */
 
-async function runIndustryResearch(env, emit, alreadyShown = []) {
+async function runIndustryResearch(env, emit, alreadyShown = [], maxAgeDays = 25) {
   // Load previously used source URLs for deduplication
   let usedUrls = [];
   try {
