@@ -37,7 +37,7 @@ OVERALL FEEL: Real, human, credible, authoritative — shot by a professional ed
 
 const FOOTER_TAG_BY_PROFILE = {
   boardroomcxo: 'Follow @boardroomcxo for more insights.',
-  ketul: 'Follow CA Ketul Patel for more insights.',
+  ketul: 'Follow CA Ketul Patel for regular updates.',
 };
 
 export async function onRequestPost(context) {
