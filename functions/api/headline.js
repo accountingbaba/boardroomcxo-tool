@@ -36,11 +36,12 @@ ${postText}
 
 RULES for each headline:
 - ONE line only. No sublines, no colons splitting two clauses, no line breaks.
-- 4 to 8 words. Punchy, magazine-cover-line register.
+- 4 to 8 words. Punchy, scroll-stopping, curiosity-driven — closer to a clickbait thumbnail headline than a sober magazine strapline. Make the reader need to know what happens next.
+- Lean on proven scroll-stop patterns where the post supports them: a specific surprising number, a curiosity gap ("the reason nobody expected"), a stark before/after or contrast, a bold claim, or a direct question — but every claim must still be true to the post, never exaggerated into something the post doesn't actually say.
 - Must be derived directly from the strongest hook, angle, or reveal actually present in the post above — not a generic template.
-- Each of the 5 options must take a genuinely different angle on the post (different hook, different phrasing), not minor rewordings of each other.
-- accent_word must be a single word or short phrase that appears VERBATIM inside that headline, chosen as the one word/phrase worth highlighting in orange.
-- virality_score is 0-100, scored on hook strength, scroll-stop power, and share potential for a LinkedIn feed image.
+- Each of the 5 options must take a genuinely different angle on the post (different hook, different phrasing), not minor rewordings of each other. At least one option should push the curiosity-gap/clickbait register as far as it can go while staying factually accurate.
+- accent_word must be a single word or short phrase that appears VERBATIM inside that headline, chosen as the one word/phrase worth highlighting in orange — ideally the number, the twist, or the most emotionally loaded word.
+- virality_score is 0-100, scored on hook strength, scroll-stop power, and share potential for a LinkedIn feed image. Reward curiosity gaps and specificity; penalise generic or flat phrasing.
 - virality_note is one short line explaining the strongest factor behind that score.
 
 Return ONLY valid JSON, no markdown fences, no explanation outside the JSON, in this exact shape:
