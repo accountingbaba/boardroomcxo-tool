@@ -416,11 +416,21 @@ function showOptions(header, items, onSelect, onShowMore) {
   const card = document.createElement('div');
   card.className = 'msg-row';
 
-  const rowsHtml = items.map((item, i) => `
+  const rowsHtml = items.map((item, i) => {
+    const hasMeta = item.date_published || item.source || item.url;
+    const metaBits = [];
+    if (item.date_published) metaBits.push(`<span class="option-meta-date">${fmtDate(item.date_published)}</span>`);
+    if (item.source) metaBits.push(`<span class="option-meta-source">${formatText(item.source)}</span>`);
+    if (item.url) metaBits.push(`<a class="option-meta-link" href="${item.url}" target="_blank" rel="noopener noreferrer">Source link</a>`);
+    return `
     <div class="option-row" data-idx="${i}">
-      <span class="option-name">${formatText(item.label)}</span>
-      ${item.score !== undefined ? `<span class="option-score">${item.score}/100</span>` : ''}
-    </div>`).join('');
+      <div class="option-row-top">
+        <span class="option-name">${formatText(item.label)}</span>
+        ${item.score !== undefined ? `<span class="option-score">${item.score}/100</span>` : ''}
+      </div>
+      ${hasMeta ? `<div class="option-meta">${metaBits.join('<span class="option-meta-dot">·</span>')}</div>` : ''}
+    </div>`;
+  }).join('');
 
   card.innerHTML = `
     <div class="msg-label">Content Engine</div>
