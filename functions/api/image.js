@@ -1,28 +1,23 @@
 /**
  * POST /api/image
- * multipart/form-data fields:
- *   photo       — reference photo file (jpeg/png)
- *   post_text   — the finalised LinkedIn post text
+ * Body (JSON):
  *   headline    — single-line headline text
  *   accent_word — word/phrase to accent in orange
  *   profile     — 'boardroomcxo' | 'ketul' — selects the footer tag line
+ *   post_text   — (optional) the finalised LinkedIn post text, for context only
  *   post_id     — (optional) DB post ID to link the prompt to
  *
- * This endpoint does not generate an image and does not call OpenAI. It runs
- * a single Claude Vision pass over the reference photo to extract a precise
- * ground-truth description, then assembles that into a ChatGPT-ready image
- * prompt. The user copies the prompt and pastes it into ChatGPT themselves,
- * alongside the same reference photo(s) and any brand logo file(s), and
- * generates the image there.
+ * This endpoint does not generate an image, does not call any LLM, and does
+ * not require a photo upload. It assembles a ChatGPT-ready image prompt from
+ * the saved image-prompt instructions (Prompts settings panel) plus the
+ * headline. The user copies the prompt and pastes it into ChatGPT themselves,
+ * attaching their own reference photo(s) and any brand logo file(s) there,
+ * and generates the image in ChatGPT directly.
  *
- * Returns: {
- *   image_prompt,        — the ChatGPT-ready prompt text
- *   subject_description, — Claude Vision extracted ground-truth description
- *   limitations_notice   — string
- * }
+ * Returns: { image_prompt, limitations_notice }
  */
 
-const LIMITATIONS_NOTICE = `This tool builds the image prompt only — it does not generate the image. Copy the prompt below and paste it into ChatGPT along with the same reference photo(s) and any brand logo file(s), then let ChatGPT generate the image directly.`;
+const LIMITATIONS_NOTICE = `This tool builds the image prompt only — it does not generate the image. Copy the prompt below and paste it into ChatGPT along with your reference photo(s) and any brand logo file(s), then let ChatGPT generate the image directly.`;
 
 const DEFAULT_IMAGE_INSTRUCTIONS = `This image must be built using the attached files only. Every person's photo is the absolute ground truth — their face, skin, expression, and clothing must be reproduced with complete photographic accuracy, without distorting or altering any facial features. Each person should look natural and humanised. Any brand logo file(s) provided are to be used exactly as attached. Under no circumstance should any face, logo, or text element be distorted, redrawn, reinterpreted, or generated from memory. If you cannot reproduce every face or logo with complete accuracy, do not generate the image.
 
@@ -99,174 +94,47 @@ SELF-CHECK BEFORE DELIVERING — regenerate if any fail:
 - Any transparent-background logo sits directly on the existing dark background with no extra panel or card added
 - Nothing has been added to the frame that was not specified`;
 
-export async function onRequestPost(context) {
-  const { request, env } = context;
-
-  let formData;
-  try {
-    formData = await request.formData();
-  } catch {
-    return json({ error: 'Expected multipart/form-data' }, 400);
-  }
-
-  const photoFile = formData.get('photo');
-  const postText = formData.get('post_text') || '';
-  const headline = formData.get('headline') || '';
-  const accentWord = formData.get('accent_word') || '';
-  const postId = formData.get('post_id') || null;
-  const profile = formData.get('profile') || 'boardroomcxo';
-
-  if (!photoFile) return json({ error: 'Reference photo required' }, 400);
-  if (!headline) return json({ error: 'Headline text required' }, 400);
-
-  // Convert uploaded file to base64 for Claude Vision
-  const photoBuffer = await photoFile.arrayBuffer();
-  const photoBase64 = arrayBufferToBase64(photoBuffer);
-  const photoMime = photoFile.type || 'image/jpeg';
-
-  const { readable, writable } = new TransformStream();
-  const writer = writable.getWriter();
-  const encoder = new TextEncoder();
-  const emit = (event) => writer.write(encoder.encode(JSON.stringify(event) + '\n'));
-
-  const pipeline = (async () => {
-    try {
-      // Stage 1: Analyse reference photo with Claude Vision
-      await emit({ stage: 'analyse_photo', status: 'start' });
-      const subjectDescription = await analysePhoto(env, photoBase64, photoMime);
-      await emit({ stage: 'analyse_photo', status: 'done' });
-
-      // Load the custom image prompt from DB settings, or use the bundled default
-      const customInstructions = await loadSetting(env, 'prompt_image');
-
-      // Stage 2: Assemble the ChatGPT-ready image prompt — no image API call
-      await emit({ stage: 'build_prompt', status: 'start' });
-      const imagePrompt = buildImagePrompt(customInstructions, subjectDescription, headline, accentWord, profile);
-      await emit({ stage: 'build_prompt', status: 'done' });
-
-      // Save prompt to DB if post_id provided
-      if (postId) {
-        try {
-          await env.DB.prepare(
-            'UPDATE posts SET image_prompt = ?, status = ? WHERE id = ?'
-          ).bind(imagePrompt, 'draft', postId).run();
-        } catch { /* non-fatal */ }
-      }
-
-      await emit({
-        stage: 'complete',
-        result: {
-          image_prompt: imagePrompt,
-          subject_description: subjectDescription,
-          limitations_notice: LIMITATIONS_NOTICE,
-        },
-      });
-    } catch (err) {
-      await emit({ stage: 'error', message: err.message });
-    } finally {
-      await writer.close();
-    }
-  })();
-
-  context.waitUntil(pipeline);
-
-  return new Response(readable, {
-    status: 200,
-    headers: { 'Content-Type': 'application/x-ndjson' },
-  });
-}
-
-/* ── STAGE 1: Claude Vision — Analyse Reference Photo ────────── */
-
-async function analysePhoto(env, photoBase64, mimeType) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1200,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: mimeType, data: photoBase64 }
-            },
-            {
-              type: 'text',
-              text: `You are analysing a reference photograph to extract a precise visual description for use in an editorial image prompt that will be handed to a human, who will paste it into ChatGPT along with this same photo. Your output must be factual, specific, and detailed. Do not interpret, idealise, or editorially describe — describe exactly what you see.
-
-Extract and document the following in a structured block labelled SUBJECT DESCRIPTION — GROUND TRUTH:
-
-FACE:
-- Overall face shape (oval, square, round, angular, etc.)
-- Forehead width and height
-- Eye shape, size, placement, colour, and distinguishing features (hooded lids, strong brow, etc.)
-- Nose shape: bridge width, tip shape, nostrils
-- Lip shape: upper lip definition, lower lip fullness, mouth width
-- Chin shape and prominence
-- Jawline: soft, defined, angular, rounded
-- Cheekbone prominence
-- Skin tone: warm/cool/neutral undertone, depth (light/medium/medium-deep/deep), surface quality
-- Distinguishing marks: moles, scars, facial hair, stubble pattern
-
-HAIR:
-- Hairline shape
-- Hair colour: base colour, highlights, grey distribution
-- Hair texture: straight, wavy, curly, coily
-- Hair style: length, volume, parting, cut
-
-EXPRESSION:
-- Exact expression in the reference photo
-- Eye direction: camera-facing, slightly off-axis, etc.
-
-CLOTHING:
-- Type of garment(s) visible
-- Colour and pattern
-- Collar type and fit
-- Visible accessories
-
-GLASSES (if present):
-- Frame shape, colour, material
-- Lens tint
-
-BUILD AND POSTURE:
-- Build: slim, medium, broad
-- Shoulder width
-- Posture: upright, relaxed, commanding
-
-Output only the SUBJECT DESCRIPTION block. No additional commentary.`
-            }
-          ]
-        }
-      ]
-    }),
-  });
-
-  if (!res.ok) throw new Error(`Claude Vision error ${res.status}: ${await res.text()}`);
-  const data = await res.json();
-  return data.content?.[0]?.text || '';
-}
-
-/* ── STAGE 2: Build ChatGPT-ready Image Prompt ───────────────── */
-
 const FOOTER_TAG_BY_PROFILE = {
   boardroomcxo: 'Follow @boardroomcxo for more insights.',
   ketul: 'Follow CA Ketul Patel for more insights.',
 };
 
-function buildImagePrompt(customInstructions, subjectDescription, headline, accentWord, profile) {
+export async function onRequestPost(context) {
+  const { request, env } = context;
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: 'Expected JSON body' }, 400);
+  }
+
+  const headline = (body.headline || '').trim();
+  const accentWord = (body.accent_word || '').trim();
+  const profile = body.profile || 'boardroomcxo';
+  const postId = body.post_id || null;
+
+  if (!headline) return json({ error: 'Headline text required' }, 400);
+
+  const customInstructions = await loadSetting(env, 'prompt_image');
+  const imagePrompt = buildImagePrompt(customInstructions, headline, accentWord, profile);
+
+  if (postId) {
+    try {
+      await env.DB.prepare(
+        'UPDATE posts SET image_prompt = ?, status = ? WHERE id = ?'
+      ).bind(imagePrompt, 'draft', postId).run();
+    } catch { /* non-fatal */ }
+  }
+
+  return json({ image_prompt: imagePrompt, limitations_notice: LIMITATIONS_NOTICE });
+}
+
+function buildImagePrompt(customInstructions, headline, accentWord, profile) {
   const instructions = (customInstructions && customInstructions.trim()) || DEFAULT_IMAGE_INSTRUCTIONS;
   const footerTag = FOOTER_TAG_BY_PROFILE[profile] || FOOTER_TAG_BY_PROFILE.boardroomcxo;
 
   return `${instructions}
-
-SUBJECT: ${subjectDescription}
 
 TEXT OVERLAY CONTENT — bottom 20-22% of image:
 - Line 1 (large, dominant, Inter ExtraBold or Montserrat ExtraBold): "${headline}" — the word "${accentWord}" in bold orange (#FF6B00), all other text in white. This must render as ONE single line — no wrapping, no second line, no subline of any kind.
@@ -282,13 +150,6 @@ async function loadSetting(env, key) {
   } catch {
     return null;
   }
-}
-
-function arrayBufferToBase64(buffer) {
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary);
 }
 
 function json(data, status = 200) {
