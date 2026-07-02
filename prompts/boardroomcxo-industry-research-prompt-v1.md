@@ -145,7 +145,7 @@ Never use: Wikipedia · generic buying guides · SEO blogs · forums · Quora ·
 
 ### Step 1 — Run Research
 
-Search across accepted source types for content published in the last 7 to 15 days. Apply all filters. Collect every article that passes.
+Search across accepted source types for content published in the last 25 days. Apply all filters. Collect every article that passes.
 
 ### Step 2 — Score Each Article
 
