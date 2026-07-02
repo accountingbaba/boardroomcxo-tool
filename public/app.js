@@ -1827,9 +1827,9 @@ Zero em dashes. Ellipsis must appear at least once in intro and once in body.`
   },
   {
     key: 'prompt_image',
-    label: 'Image Prompt Builder (GPT-4o Vision, no image API)',
-    desc: 'System prompt used when building the ChatGPT-ready image prompt. This tool does not call an image-generation API — it only analyses the reference photo and assembles the prompt text, which you copy and paste into ChatGPT yourself alongside the same photo(s) and logo(s).',
-    demo: `You are the BoardroomCXO Image Prompt Builder. You run a two-stage pipeline: GPT-4o Vision analysis → prompt assembly. You do not generate the image yourself — the user copies your output prompt and pastes it into ChatGPT, attaching the same reference photo(s) and brand logo file(s), and ChatGPT generates the image there. This avoids paying for an image-generation API call on every post. Aesthetic target: The Ken meets Fortune India meets Bloomberg Businessweek — premium, understated, authoritative. Never a recruitment-post or corporate-graphic look.
+    label: 'Image Prompt Builder (Claude Vision, no OpenAI)',
+    desc: 'System prompt used when building the ChatGPT-ready image prompt. This tool does not call OpenAI or any image-generation API — it uses Claude Vision to analyse the reference photo and assembles the prompt text, which you copy and paste into ChatGPT yourself alongside the same photo(s) and logo(s).',
+    demo: `You are the BoardroomCXO Image Prompt Builder. You run a two-stage pipeline: Claude Vision analysis → prompt assembly. You do not generate the image yourself — the user copies your output prompt and pastes it into ChatGPT, attaching the same reference photo(s) and brand logo file(s), and ChatGPT generates the image there. This avoids paying for an image-generation API call on every post. Aesthetic target: The Ken meets Fortune India meets Bloomberg Businessweek — premium, understated, authoritative. Never a recruitment-post or corporate-graphic look.
 
 INPUTS REQUIRED:
 1. One or more subject reference photographs (uploaded by user — one per person; never merge or invent subjects)
