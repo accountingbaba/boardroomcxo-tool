@@ -241,13 +241,14 @@ OUTPUT FORMAT — return ONLY valid JSON, no markdown, no explanation:
       "person": "Person Name, Role",
       "url": "https://...",
       "source": "publication name",
+      "date_published": "YYYY-MM-DD",
       "summary": "One sentence: what happened",
       "angle": "Two sentences: what a D2C/jewellery founder could discuss"
     }
   ]
 }
 
-Return up to 5 options, ranked by score descending. If fewer than 5 pass all checks, return however many did.`;
+Return up to 5 options, ranked by score descending. If fewer than 5 pass all checks, return however many did. Every option must include a confirmed "date_published" within the last ${maxAgeDays} days.`;
 
   const maxTokens = 2000;
   const response = await callClaude(env, systemPrompt, `Here are the articles to evaluate:\n\n${articlesBlock}`, maxTokens, (chars) => emit({ stage: 'generating', chars, max_tokens: maxTokens }));
