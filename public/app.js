@@ -1540,56 +1540,43 @@ function renderImageResult(data) {
   const card = document.createElement('div');
   card.className = 'msg-row';
 
-  const score = data.quality_score || 0;
-  const report = data.quality_report || {};
-  const passCount = Object.values(report).filter(c => c.status === 'Pass').length;
-  const totalChecks = Object.keys(report).length;
-
-  const checksHtml = Object.entries(report).map(([key, c]) => {
-    const label = key.replace(/_/g, ' ');
-    const cls = c.status === 'Pass' ? 'pass' : 'fail';
-    return `<span class="image-card-score ${cls}">${c.status === 'Pass' ? '✓' : '✗'} ${label} ${c.points}/${c.max}</span>`;
-  }).join('');
-
-  const imgHtml = data.image_url
-    ? `<img class="image-card-img" src="${data.image_url}" alt="Generated post image" />`
-    : `<div style="background:#1B2B4B;border-radius:6px;height:200px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:12px;">${data._dev ? 'Image preview (dev mode — real image generated on Cloudflare)' : 'Image not available'}</div>`;
-
   card.innerHTML = `
     <div class="msg-label">Content Engine</div>
     <div class="image-card">
-      <div class="image-card-label">Generated Image — Attempt ${data.attempt} of 3 — Score ${score}/100</div>
-      ${imgHtml}
-      <div class="image-card-scores">${checksHtml}</div>
-      <div class="image-card-notice">${data.limitations_notice}</div>
+      <div class="image-card-label">ChatGPT-ready Image Prompt${data._dev ? ' (demo mode)' : ''}</div>
+      <textarea class="prompt-textarea" id="image-prompt-text" readonly rows="10">${escHtml(data.image_prompt || '')}</textarea>
+      <div class="image-card-notice">${escHtml(data.limitations_notice || '')}</div>
       <div class="image-card-actions">
-        ${data.image_url ? `<button class="action-btn primary" id="download-img-btn">Download Image</button>` : ''}
-        <button class="action-btn" id="regen-img-btn">Regenerate Image</button>
+        <button class="action-btn primary" id="copy-prompt-btn">Copy Prompt</button>
+        <button class="action-btn" id="regen-img-btn">Rebuild Prompt</button>
       </div>
     </div>`;
 
   area.appendChild(card);
 
-  if (data.image_url) {
-    document.getElementById('download-img-btn')?.addEventListener('click', () => {
-      const a = document.createElement('a');
-      a.href = data.image_url;
-      a.download = 'boardroomcxo-post-image.png';
-      a.click();
-    });
-  }
+  document.getElementById('copy-prompt-btn')?.addEventListener('click', async (e) => {
+    try {
+      await navigator.clipboard.writeText(data.image_prompt || '');
+      const btn = e.target;
+      const original = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    } catch {
+      card.querySelector('#image-prompt-text')?.select();
+    }
+  });
 
   document.getElementById('regen-img-btn')?.addEventListener('click', () => {
     card.remove();
-    addBotMessage('Upload a reference photo to generate a new image.');
+    addBotMessage('Upload a reference photo to rebuild the image prompt.');
     showHeadlineApprovalCard();
   });
 
   scrollChat();
-  addBotMessage(`Image ready. ${passCount}/${totalChecks} quality checks passed (${score}/100). Download it, then composite the logos in Canva or Figma. Say "repurpose" to generate Instagram, WhatsApp, and Blog versions next.`);
+  addBotMessage('Prompt ready. Copy it and paste into ChatGPT along with the same reference photo(s) and any brand logo file(s) to generate the image. Say "repurpose" to generate Instagram, WhatsApp, and Blog versions next.');
   chatState = 'done';
 
-  // Save to calendar after image is generated
+  // Save to calendar once the prompt is ready
   addToCalendarAfterImage(data);
 }
 
