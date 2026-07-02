@@ -2254,8 +2254,8 @@ async function initPreferencesPanel() {
         <label class="pref-label">Article freshness (industry news)</label>
         <select id="pref-article-freshness" class="form-input pref-select">
           <option value="7" ${prefs.articleFreshness === 7 ? 'selected' : ''}>Last 7 days</option>
-          <option value="15" ${(!prefs.articleFreshness || prefs.articleFreshness === 15) ? 'selected' : ''}>Last 15 days</option>
-          <option value="25" ${prefs.articleFreshness === 25 ? 'selected' : ''}>Last 20-25 days (recommended)</option>
+          <option value="15" ${prefs.articleFreshness === 15 ? 'selected' : ''}>Last 15 days</option>
+          <option value="25" ${(!prefs.articleFreshness || prefs.articleFreshness === 25) ? 'selected' : ''}>Last 25 days (recommended)</option>
         </select>
       </div>
       <div class="pref-row">
