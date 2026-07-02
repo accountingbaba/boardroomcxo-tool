@@ -5,21 +5,28 @@
  *   post_text   — the finalised LinkedIn post text
  *   headline    — single-line headline text
  *   accent_word — word/phrase to accent in orange
- *   post_id     — (optional) DB post ID to link image to
+ *   profile     — 'boardroomcxo' | 'ketul' — selects the footer tag line
+ *   post_id     — (optional) DB post ID to link the prompt to
+ *
+ * This endpoint does not generate an image. Calling an image-generation API
+ * here costs money per image; instead it runs a single GPT-4o Vision pass
+ * over the reference photo to extract a precise ground-truth description,
+ * then assembles that into a ChatGPT-ready image prompt. The user copies the
+ * prompt and pastes it into ChatGPT themselves, alongside the same reference
+ * photo(s) and any brand logo file(s), and generates the image there.
  *
  * Returns: {
- *   image_url,         — base64 data URL of best image
- *   attempt,           — 1 | 2 | 3
- *   quality_score,     — out of 100
- *   quality_report,    — object with each check result
- *   dalle_prompt,      — the prompt used for the final attempt
- *   limitations_notice — string
+ *   image_prompt,        — the ChatGPT-ready prompt text
+ *   subject_description, — GPT-4o Vision extracted ground-truth description
+ *   limitations_notice   — string
  * }
  */
 
-const LIMITATIONS_NOTICE = `Note: Your reference photo is used directly as image input (not just a text description), but the model can still render the subject imperfectly — it will be close but will not be pixel-perfect. Always compare the generated image against your reference photo before publishing. Two logo zones are reserved as clean placeholders — a small watermark zone for the BoardroomCXO logo and a prominent zone for the featured brand's logo(s) — and must be composited manually using Canva, Figma, or any design tool. This takes approximately 5 to 10 minutes.`;
+const LIMITATIONS_NOTICE = `This tool builds the image prompt only — it does not generate the image. Copy the prompt below and paste it into ChatGPT along with the same reference photo(s) and any brand logo file(s), then let ChatGPT generate the image directly.`;
 
-const DEFAULT_IMAGE_INSTRUCTIONS = `Photorealistic editorial portrait photograph. 4:5 portrait format. LinkedIn social media post image. Aesthetic target: The Ken meets Fortune India meets Bloomberg Businessweek — premium, understated, authoritative. Never a recruitment-post or corporate-graphic look. No decorative fills, no background elements, no creative liberties — everything in frame must have a reason.
+const DEFAULT_IMAGE_INSTRUCTIONS = `This image must be built using the attached files only. Every person's photo is the absolute ground truth — their face, skin, expression, and clothing must be reproduced with complete photographic accuracy, without distorting or altering any facial features. Each person should look natural and humanised. Any brand logo file(s) provided are to be used exactly as attached. Under no circumstance should any face, logo, or text element be distorted, redrawn, reinterpreted, or generated from memory. If you cannot reproduce every face or logo with complete accuracy, do not generate the image.
+
+Photorealistic editorial portrait photograph. 4:5 portrait format. LinkedIn social media post image. Aesthetic target: The Ken meets Fortune India meets Bloomberg Businessweek — premium, understated, authoritative. Never a recruitment-post or corporate-graphic look. No decorative fills, no background elements, no creative liberties — everything in frame must have a reason.
 
 COMPOSITION — single subject:
 - Centred or slightly left of centre, three-quarter body visible, from mid-shin upward
@@ -132,50 +139,25 @@ export async function onRequestPost(context) {
       // Load the custom image prompt from DB settings, or use the bundled default
       const customInstructions = await loadSetting(env, 'prompt_image');
 
-      // Up to 3 generation attempts
-      let bestResult = null;
-      let bestScore = 0;
+      // Stage 2: Assemble the ChatGPT-ready image prompt — no image API call
+      await emit({ stage: 'build_prompt', status: 'start' });
+      const imagePrompt = buildImagePrompt(customInstructions, subjectDescription, headline, accentWord, profile);
+      await emit({ stage: 'build_prompt', status: 'done' });
 
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        // Stage 2: Build DALL-E prompt and generate image
-        await emit({ stage: 'generate_image', status: 'start', attempt });
-        const dallePrompt = buildDallePrompt(customInstructions, subjectDescription, headline, accentWord, profile, attempt, bestResult?.report);
-        const imageB64 = await generateImage(env, dallePrompt, photoBuffer, photoMime);
-        await emit({ stage: 'generate_image', status: 'done', attempt });
-
-        // Stage 3: Quality check with GPT-4o Vision
-        await emit({ stage: 'quality_check', status: 'start', attempt });
-        const { score, report } = await qualityCheck(env, imageB64, photoBase64, photoMime);
-        await emit({ stage: 'quality_check', status: 'done', attempt, score });
-
-        if (!bestResult || score > bestScore) {
-          bestScore = score;
-          bestResult = { imageB64, score, report, dallePrompt, attempt };
-        }
-
-        // Deliver if above threshold
-        if (score >= 85) break;
-        // Continue to next attempt if not final
-        if (attempt === 3) break;
-      }
-
-      // Save image reference to DB if post_id provided
+      // Save prompt to DB if post_id provided
       if (postId) {
         try {
           await env.DB.prepare(
             'UPDATE posts SET image_prompt = ?, status = ? WHERE id = ?'
-          ).bind(bestResult.dallePrompt, 'draft', postId).run();
+          ).bind(imagePrompt, 'draft', postId).run();
         } catch { /* non-fatal */ }
       }
 
       await emit({
         stage: 'complete',
         result: {
-          image_url: `data:image/png;base64,${bestResult.imageB64}`,
-          attempt: bestResult.attempt,
-          quality_score: bestResult.score,
-          quality_report: bestResult.report,
-          dalle_prompt: bestResult.dallePrompt,
+          image_prompt: imagePrompt,
+          subject_description: subjectDescription,
           limitations_notice: LIMITATIONS_NOTICE,
         },
       });
@@ -212,7 +194,7 @@ async function analysePhoto(env, photoBase64, mimeType) {
           content: [
             {
               type: 'text',
-              text: `You are analysing a reference photograph to extract a precise visual description for use in generating an editorial image via DALL-E 3. Your output must be factual, specific, and detailed. Do not interpret, idealise, or editorially describe — describe exactly what you see.
+              text: `You are analysing a reference photograph to extract a precise visual description for use in an editorial image prompt that will be handed to a human, who will paste it into ChatGPT along with this same photo. Your output must be factual, specific, and detailed. Do not interpret, idealise, or editorially describe — describe exactly what you see.
 
 Extract and document the following in a structured block labelled SUBJECT DESCRIPTION — GROUND TRUTH:
 
@@ -270,34 +252,14 @@ Output only the SUBJECT DESCRIPTION block. No additional commentary.`
   return data.choices?.[0]?.message?.content || '';
 }
 
-/* ── STAGE 2: Build DALL-E Prompt ───────────────────────────── */
+/* ── STAGE 2: Build ChatGPT-ready Image Prompt ───────────────── */
 
 const FOOTER_TAG_BY_PROFILE = {
   boardroomcxo: 'Follow @boardroomcxo for more insights.',
   ketul: 'Follow CA Ketul Patel for more insights.',
 };
 
-function buildDallePrompt(customInstructions, subjectDescription, headline, accentWord, profile, attempt, prevReport) {
-  // On retry attempts, add refinements based on what failed
-  let refinements = '';
-  if (attempt > 1 && prevReport) {
-    const failed = Object.entries(prevReport)
-      .filter(([, v]) => v?.status === 'Fail')
-      .map(([k]) => k);
-    if (failed.includes('face_match')) {
-      refinements += ' CRITICAL: The face MUST match the described bone structure, skin tone, and hair exactly. Photorealistic — not illustrated.';
-    }
-    if (failed.includes('skin_realism')) {
-      refinements += ' The skin MUST show natural pores, subtle lines, and uneven light falloff. No smoothing, no beautification, no AI skin processing.';
-    }
-    if (failed.includes('background_quality')) {
-      refinements += ' Background must be a pure deep charcoal-to-warm-grey gradient. No props, no environment, no textures.';
-    }
-    if (failed.includes('text_area')) {
-      refinements += ' The bottom 20% must darken naturally to near-black for text overlay. No coloured panel.';
-    }
-  }
-
+function buildImagePrompt(customInstructions, subjectDescription, headline, accentWord, profile) {
   const instructions = (customInstructions && customInstructions.trim()) || DEFAULT_IMAGE_INSTRUCTIONS;
   const footerTag = FOOTER_TAG_BY_PROFILE[profile] || FOOTER_TAG_BY_PROFILE.boardroomcxo;
 
@@ -307,116 +269,7 @@ SUBJECT: ${subjectDescription}
 
 TEXT OVERLAY CONTENT — bottom 20-22% of image:
 - Line 1 (large, dominant, Inter ExtraBold or Montserrat ExtraBold): "${headline}" — the word "${accentWord}" in bold orange (#FF6B00), all other text in white. This must render as ONE single line — no wrapping, no second line, no subline of any kind.
-- Line 2 (same font family, Light weight, very small, white at 60-70% opacity): "${footerTag}"${refinements}`;
-}
-
-/* ── STAGE 2: Generate Image with gpt-image-1 (image-to-image edit) ─ */
-
-async function generateImage(env, prompt, photoBuffer, photoMime) {
-  // Use the /edits endpoint so the uploaded reference photo is passed to the
-  // model as actual image input, not just a text description. input_fidelity:
-  // 'high' tells gpt-image-1 to preserve the subject's real facial identity.
-  const form = new FormData();
-  form.append('model', 'gpt-image-1');
-  form.append('prompt', prompt);
-  form.append('n', '1');
-  form.append('size', '1024x1536'); // portrait — 2:3 closest to 4:5 for gpt-image-1
-  form.append('quality', 'high');
-  form.append('output_format', 'png');
-  form.append('input_fidelity', 'high');
-  form.append('image', new Blob([photoBuffer], { type: photoMime || 'image/jpeg' }), 'reference.jpg');
-
-  const res = await fetch('https://api.openai.com/v1/images/edits', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
-    },
-    body: form,
-  });
-
-  if (!res.ok) throw new Error(`Image generation error ${res.status}: ${await res.text()}`);
-  const data = await res.json();
-  // gpt-image-1 returns b64_json directly
-  const b64 = data.data?.[0]?.b64_json || '';
-  if (!b64) throw new Error('No image data returned');
-  return b64;
-}
-
-/* ── STAGE 3: GPT-4o Vision Quality Check ────────────────────── */
-
-async function qualityCheck(env, generatedImageB64, referencePhotoB64, photoMime) {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      max_tokens: 1000,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: `You are reviewing a DALL-E 3 generated image (IMAGE 1) against a reference photograph (IMAGE 2) of the subject and against editorial brand standards. Score each criterion strictly. The standard is editorial photography for a premium business publication, not social media content.
-
-Score each check. Return ONLY valid JSON — no markdown, no explanation outside the JSON.
-
-{
-  "score": 0,
-  "checks": {
-    "face_match": { "status": "Pass|Fail", "points": 0, "max": 25, "note": "one line" },
-    "skin_realism": { "status": "Pass|Fail", "points": 0, "max": 15, "note": "one line" },
-    "shadow_depth": { "status": "Pass|Fail", "points": 0, "max": 10, "note": "one line" },
-    "clothing_accuracy": { "status": "Pass|Fail", "points": 0, "max": 10, "note": "one line" },
-    "background_quality": { "status": "Pass|Fail", "points": 0, "max": 10, "note": "one line" },
-    "lighting_quality": { "status": "Pass|Fail", "points": 0, "max": 10, "note": "one line" },
-    "text_area": { "status": "Pass|Fail", "points": 0, "max": 10, "note": "one line" },
-    "logo_placeholder_zones": { "status": "Pass|Fail", "points": 0, "max": 5, "note": "one line" },
-    "overall_editorial_feel": { "status": "Pass|Fail", "points": 0, "max": 5, "note": "one line" }
-  }
-}
-
-Scoring guide:
-- face_match (25pts): Face resembles reference photo — similar bone structure, skin tone, hair, expression
-- skin_realism (15pts): Natural pores, subtle lines, natural asymmetry — no smoothing, no AI beautification
-- shadow_depth (10pts): Subtle natural directional shadow behind subject, soft-edged, photographic
-- clothing_accuracy (10pts): Clothing colour, type, texture consistent with reference
-- background_quality (10pts): Deep charcoal-to-warm-grey gradient, clean, no props
-- lighting_quality (10pts): One dominant directional studio light, natural, realistic face shadow
-- text_area (10pts): Bottom text fade present, editorial feel, no coloured banners
-- logo_placeholder_zones (5pts): Small BoardroomCXO watermark zone and prominent brand-logo zone are both clean, clearly reserved, and visually distinct in size
-- overall_editorial_feel (5pts): Feels like editorial photography, not AI-generated content
-
-Set "score" to the sum of all points earned.`
-            },
-            {
-              type: 'image_url',
-              image_url: { url: `data:image/png;base64,${generatedImageB64}`, detail: 'high' }
-            },
-            {
-              type: 'image_url',
-              image_url: { url: `data:${photoMime};base64,${referencePhotoB64}`, detail: 'high' }
-            }
-          ]
-        }
-      ]
-    }),
-  });
-
-  if (!res.ok) throw new Error(`GPT-4o QC error ${res.status}: ${await res.text()}`);
-  const data = await res.json();
-  const text = data.choices?.[0]?.message?.content || '{}';
-
-  try {
-    const clean = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
-    const parsed = JSON.parse(clean);
-    return { score: parsed.score || 0, report: parsed.checks || {} };
-  } catch {
-    return { score: 0, report: {} };
-  }
+- Line 2 (same font family, Light weight, very small, white at 60-70% opacity): "${footerTag}"`;
 }
 
 /* ── HELPERS ─────────────────────────────────────────────────── */
