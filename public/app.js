@@ -1527,7 +1527,7 @@ async function runImagePipeline(personFile, allFiles, headline, accentWord) {
     finishProgress(progressCard);
 
     renderImageResult({
-      image_prompt: `This image must be built using the attached files only. Every person's photo is the absolute ground truth...\n\n[Demo mode — the real prompt is assembled from your reference photo on Cloudflare, using GPT-4o Vision.]\n\nHeadline: "${headline}" (accent: "${accentWord}")`,
+      image_prompt: `This image must be built using the attached files only. Every person's photo is the absolute ground truth...\n\n[Demo mode — the real prompt is assembled from your reference photo on Cloudflare, using Claude Vision.]\n\nHeadline: "${headline}" (accent: "${accentWord}")`,
       subject_description: 'SUBJECT DESCRIPTION — GROUND TRUTH (demo mode, generated on Cloudflare in production)',
       limitations_notice: 'This tool builds the image prompt only — it does not generate the image. Copy the prompt and paste it into ChatGPT along with the same reference photo(s) and any brand logo file(s), then let ChatGPT generate the image directly.',
       _dev: true,
