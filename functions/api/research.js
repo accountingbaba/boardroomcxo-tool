@@ -254,6 +254,13 @@ Return up to 5 options, ranked by score descending. If fewer than 5 pass all che
   const response = await callClaude(env, systemPrompt, `Here are the articles to evaluate:\n\n${articlesBlock}`, maxTokens, (chars) => emit({ stage: 'generating', chars, max_tokens: maxTokens }));
   const parsed = parseJSON(response);
   if (!parsed?.options) throw new Error('No options in response');
+  if (parsed.options.length === 0) {
+    throw new Error(
+      `Found ${articles.length} article(s) from the last ${maxAgeDays} days, but none passed the quality filters ` +
+      `(named brand + named person + concrete action + India nexus, matching one of the 7 story types). ` +
+      `Try widening the freshness window in Settings, or check back later for fresh coverage.`
+    );
+  }
   return { options: parsed.options };
 }
 
