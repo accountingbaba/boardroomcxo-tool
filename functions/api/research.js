@@ -36,7 +36,7 @@ export async function onRequestPost(context) {
     try {
       const result = profile === 'boardroomcxo'
         ? await runLeaderResearch(env, emit, alreadyShown)
-        : await runIndustryResearch(env, emit, alreadyShown);
+        : await runIndustryResearch(env, emit, alreadyShown, maxAgeDays);
       await emit({ stage: 'complete', result });
     } catch (err) {
       await emit({ stage: 'error', message: err.message });
