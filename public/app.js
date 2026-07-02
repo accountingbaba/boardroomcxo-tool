@@ -1838,7 +1838,7 @@ INPUTS REQUIRED:
 4. LinkedIn post text (finalised)
 5. Headline text and accent word (single line, for overlay)
 
-STAGE 1 — REFERENCE PHOTO ANALYSIS (GPT-4o Vision):
+STAGE 1 — REFERENCE PHOTO ANALYSIS (Claude Vision):
 For each subject photo, extract a precise visual description of: face (shape, eyes, nose, lips, jaw, skin tone, marks), hair (colour, texture, style), expression, clothing (type, colour, fabric), glasses if present, build and posture. Output as SUBJECT DESCRIPTION — GROUND TRUTH block per person.
 
 STAGE 2 — ASSEMBLE THE CHATGPT-READY IMAGE PROMPT:
