@@ -979,6 +979,7 @@ async function runPostGeneration(profile, item) {
         method: 'POST',
         headers: apiHeaders(),
         body: JSON.stringify({ profile, item }),
+        signal: progressCard._controller.signal,
       });
       if (!res.ok) throw new Error(await res.text());
       data = await readNdjsonStream(res, (evt) => {
@@ -992,6 +993,7 @@ async function runPostGeneration(profile, item) {
     } catch (err) {
       chatState = 'idle';
       document.getElementById('brew-btn').disabled = false;
+      if (err.name === 'AbortError') { markProgressCancelled(progressCard); return; }
       addBotMessage(`Post generation failed: ${err.message}. Please try again.`);
       return;
     }
@@ -1003,6 +1005,12 @@ async function runPostGeneration(profile, item) {
       setStepActive(progressCard, i, steps.length);
       await delay(900 + Math.random() * 400);
       setStepDone(progressCard, i, steps.length);
+    }
+    if (progressCard._controller.signal.aborted) {
+      markProgressCancelled(progressCard);
+      chatState = 'idle';
+      document.getElementById('brew-btn').disabled = false;
+      return;
     }
     finishProgress(progressCard);
 
