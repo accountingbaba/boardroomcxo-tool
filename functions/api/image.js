@@ -176,22 +176,27 @@ export async function onRequestPost(context) {
   });
 }
 
-/* ── STAGE 1: GPT-4o Vision — Analyse Reference Photo ───────── */
+/* ── STAGE 1: Claude Vision — Analyse Reference Photo ────────── */
 
 async function analysePhoto(env, photoBase64, mimeType) {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
+      'x-api-key': env.ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1200,
       messages: [
         {
           role: 'user',
           content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: mimeType, data: photoBase64 }
+            },
             {
               type: 'text',
               text: `You are analysing a reference photograph to extract a precise visual description for use in an editorial image prompt that will be handed to a human, who will paste it into ChatGPT along with this same photo. Your output must be factual, specific, and detailed. Do not interpret, idealise, or editorially describe — describe exactly what you see.
@@ -236,10 +241,6 @@ BUILD AND POSTURE:
 - Posture: upright, relaxed, commanding
 
 Output only the SUBJECT DESCRIPTION block. No additional commentary.`
-            },
-            {
-              type: 'image_url',
-              image_url: { url: `data:${mimeType};base64,${photoBase64}`, detail: 'high' }
             }
           ]
         }
@@ -247,9 +248,9 @@ Output only the SUBJECT DESCRIPTION block. No additional commentary.`
     }),
   });
 
-  if (!res.ok) throw new Error(`GPT-4o Vision error ${res.status}: ${await res.text()}`);
+  if (!res.ok) throw new Error(`Claude Vision error ${res.status}: ${await res.text()}`);
   const data = await res.json();
-  return data.choices?.[0]?.message?.content || '';
+  return data.content?.[0]?.text || '';
 }
 
 /* ── STAGE 2: Build ChatGPT-ready Image Prompt ───────────────── */
