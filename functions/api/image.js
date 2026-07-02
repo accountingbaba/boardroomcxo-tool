@@ -31,7 +31,8 @@ COMPOSITION — single subject:
 
 COMPOSITION — multiple subjects (when more than one reference photo is provided):
 - Compose for exactly the number of people provided — never invent or merge subjects
-- Two people: three-quarter body visible, standing at a natural conversational distance, roughly symmetrical or slightly left-weighted, each preserving their own photographed angle rather than forced to face camera
+- Each person keeps their own pose, stance, head angle, and crop/zoom level exactly as captured in their own reference photo — do not restage anyone into a shared standing pose or force them to face camera
+- Two people: place at a natural conversational distance, roughly symmetrical or slightly left-weighted, each preserving their own photographed angle
 - Three or more: natural single-row editorial group (slight depth stagger reads as authentic), all faces at comparable scale, none cropped or crowded
 - If one person is clearly the primary subject of the story, they may sit marginally larger, more central, or sharper, without reducing the accuracy of the others
 - Lighting and shadow treatment must be even and consistent across every subject — no one person more "studio-lit" than another
