@@ -1471,7 +1471,7 @@ async function runImagePipeline(personFile, allFiles, headline, accentWord) {
   chatState = 'generating';
 
   const steps = [
-    'Analysing reference photo (GPT-4o Vision)',
+    'Analysing reference photo (Claude Vision)',
     'Building ChatGPT-ready image prompt',
   ];
   const progressCard = showProgress('Building image prompt...', steps);
