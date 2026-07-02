@@ -2231,29 +2231,6 @@ function saveLocalPrefs(prefs) {
 async function initPreferencesPanel() {
   const body = document.getElementById('preferences-body');
   const prefs = loadLocalPrefs();
-  const storedLogos = loadStoredLogos();
-
-  function logoSlotHtml(key, label) {
-    const stored = storedLogos[key];
-    return `
-      <div class="pref-logo-slot" id="pref-slot-wrap-${key}">
-        <div class="pref-logo-label">${label}</div>
-        ${stored
-          ? `<img class="pref-logo-preview" id="pref-logo-img-${key}" src="${stored}" />
-             <div class="pref-logo-slot-actions">
-               <label class="pref-upload-replace-btn">
-                 Change
-                 <input type="file" accept="image/jpeg,image/png,image/webp" style="display:none" data-logo-key="${key}" class="pref-logo-file-input" />
-               </label>
-               <button class="slot-clear-btn" onclick="clearStoredLogoAndRefreshPrefs('${key}')">Remove</button>
-             </div>`
-          : `<label class="pref-logo-upload-zone">
-               <input type="file" accept="image/jpeg,image/png,image/webp" style="display:none" data-logo-key="${key}" class="pref-logo-file-input" />
-               <i class="ti ti-upload" style="font-size:18px;color:#bbb"></i>
-               <div style="font-size:11px;color:#aaa;margin-top:4px">Click to upload</div>
-             </label>`}
-      </div>`;
-  }
 
   body.innerHTML = `
     <div class="settings-section-title">Content defaults</div>
@@ -2279,16 +2256,6 @@ async function initPreferencesPanel() {
       </div>
     </div>
 
-    <div class="settings-section-title" style="margin-top:24px">Saved brand logos</div>
-    <div style="font-size:12px;color:#888;margin-bottom:14px;line-height:1.5">Logos saved here are reused automatically in the image generation flow. Remove and re-upload anytime.</div>
-    <div class="pref-logos-grid" id="pref-logos-grid">
-      ${logoSlotHtml('bcxo_logo', 'BoardroomCXO Logo')}
-      ${logoSlotHtml('logo1', 'Logo Slot 1')}
-      ${logoSlotHtml('logo2', 'Logo Slot 2')}
-      ${logoSlotHtml('logo3', 'Logo Slot 3')}
-      ${logoSlotHtml('logo4', 'Logo Slot 4')}
-    </div>
-
     <div style="margin-top:24px;display:flex;align-items:center;gap:12px">
       <button class="save-btn" id="pref-save-btn">Save Preferences</button>
       <div id="pref-msg" class="settings-msg" style="display:none"></div>
@@ -2304,28 +2271,6 @@ async function initPreferencesPanel() {
     saveLocalPrefs(updated);
     showMsg(document.getElementById('pref-msg'), 'Preferences saved.', 'success');
   });
-
-  // Wire up logo file inputs
-  document.querySelectorAll('.pref-logo-file-input').forEach(input => {
-    input.addEventListener('change', () => {
-      const file = input.files[0];
-      const key = input.dataset.logoKey;
-      if (!file || !key) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        saveStoredLogo(key, e.target.result);
-        panelInited['preferences'] = false;
-        initPreferencesPanel();
-      };
-      reader.readAsDataURL(file);
-    });
-  });
-}
-
-function clearStoredLogoAndRefreshPrefs(key) {
-  clearStoredLogo(key);
-  panelInited['preferences'] = false;
-  initPreferencesPanel();
 }
 
 /* ── SHARED HELPERS ─────────────────────────────────────────── */
