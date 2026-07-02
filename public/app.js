@@ -1455,20 +1455,14 @@ function showImageUploadCard(headline, accentWord) {
 }
 
 // Maps a real backend pipeline event to a monotonically increasing overall
-// percentage. Each retry attempt (up to 3) gets its own budget slice, so the
-// bar never regresses even though the pipeline can loop back through
-// generate/quality-check on a retry.
+// percentage, so the bar never regresses across the two pipeline stages.
 function imagePipelinePct(evt) {
-  const perAttempt = 25;
-  const attemptBase = 20 + (Math.max(1, evt.attempt || 1) - 1) * perAttempt;
   const key = `${evt.stage}:${evt.status}`;
   switch (key) {
-    case 'analyse_photo:start': return 5;
-    case 'analyse_photo:done': return 20;
-    case 'generate_image:start': return attemptBase + 5;
-    case 'generate_image:done': return attemptBase + 15;
-    case 'quality_check:start': return attemptBase + 18;
-    case 'quality_check:done': return Math.min(95, attemptBase + perAttempt);
+    case 'analyse_photo:start': return 10;
+    case 'analyse_photo:done': return 55;
+    case 'build_prompt:start': return 65;
+    case 'build_prompt:done': return 95;
     default: return null;
   }
 }
@@ -1478,11 +1472,9 @@ async function runImagePipeline(personFile, allFiles, headline, accentWord) {
 
   const steps = [
     'Analysing reference photo (GPT-4o Vision)',
-    'Generating editorial image',
-    'Running quality check (GPT-4o Vision)',
-    'Delivering best result'
+    'Building ChatGPT-ready image prompt',
   ];
-  const progressCard = showProgress('Generating post image...', steps);
+  const progressCard = showProgress('Building image prompt...', steps);
 
   if (isProd) {
     setStepActive(progressCard, 0, steps.length);
@@ -1511,31 +1503,20 @@ async function runImagePipeline(personFile, allFiles, headline, accentWord) {
         if (evt.stage === 'analyse_photo') {
           if (evt.status === 'start') setStepActive(progressCard, 0, steps.length);
           else setStepDone(progressCard, 0, steps.length);
-        } else if (evt.stage === 'generate_image') {
-          const label = progressCard.querySelector('#step-label-1');
-          if (label) label.textContent = evt.attempt > 1
-            ? `Generating editorial image (attempt ${evt.attempt} of 3)`
-            : 'Generating editorial image';
+        } else if (evt.stage === 'build_prompt') {
           if (evt.status === 'start') setStepActive(progressCard, 1, steps.length);
           else setStepDone(progressCard, 1, steps.length);
-        } else if (evt.stage === 'quality_check') {
-          if (evt.status === 'start') setStepActive(progressCard, 2, steps.length);
-          else setStepDone(progressCard, 2, steps.length);
         }
 
-        // setStepActive/setStepDone above compute the bar from step index,
-        // which regresses on a retry — overwrite with the real monotonic pct.
         const pct = imagePipelinePct(evt);
         if (pct !== null) setProgressPct(progressCard, pct);
       });
 
-      setStepActive(progressCard, 3, steps.length);
-      setStepDone(progressCard, 3, steps.length);
       finishProgress(progressCard);
       renderImageResult(data);
     } catch (err) {
       chatState = 'done';
-      addBotMessage(`Image generation failed: ${err.message}. Please try again.`);
+      addBotMessage(`Prompt generation failed: ${err.message}. Please try again.`);
     }
   } else {
     for (let i = 0; i < steps.length; i++) {
@@ -1546,21 +1527,9 @@ async function runImagePipeline(personFile, allFiles, headline, accentWord) {
     finishProgress(progressCard);
 
     renderImageResult({
-      image_url: null,
-      attempt: 1,
-      quality_score: 87,
-      quality_report: {
-        face_match: { status: 'Pass', points: 22, max: 25, note: 'Strong facial structure match' },
-        skin_realism: { status: 'Pass', points: 13, max: 15, note: 'Natural texture, minor smoothing detected' },
-        shadow_depth: { status: 'Pass', points: 9, max: 10, note: 'Soft directional shadow present' },
-        clothing_accuracy: { status: 'Pass', points: 9, max: 10, note: 'Suit colour and collar consistent' },
-        background_quality: { status: 'Pass', points: 10, max: 10, note: 'Clean charcoal gradient, no props' },
-        lighting_quality: { status: 'Pass', points: 9, max: 10, note: 'Directional studio light, natural' },
-        text_area: { status: 'Pass', points: 9, max: 10, note: 'Bottom fade clean, editorial feel' },
-        logo_placeholder_zones: { status: 'Pass', points: 5, max: 5, note: 'Both zones clearly reserved' },
-        overall_editorial_feel: { status: 'Pass', points: 1, max: 5, note: 'Slight AI artifact visible in background' },
-      },
-      limitations_notice: 'Note: DALL-E 3 generates images from text descriptions. The subject\'s face will be close but not pixel-perfect. Logo zones must be composited manually in Canva or Figma.',
+      image_prompt: `This image must be built using the attached files only. Every person's photo is the absolute ground truth...\n\n[Demo mode — the real prompt is assembled from your reference photo on Cloudflare, using GPT-4o Vision.]\n\nHeadline: "${headline}" (accent: "${accentWord}")`,
+      subject_description: 'SUBJECT DESCRIPTION — GROUND TRUTH (demo mode, generated on Cloudflare in production)',
+      limitations_notice: 'This tool builds the image prompt only — it does not generate the image. Copy the prompt and paste it into ChatGPT along with the same reference photo(s) and any brand logo file(s), then let ChatGPT generate the image directly.',
       _dev: true,
     });
   }
