@@ -886,6 +886,7 @@ async function runIndustryNewsFlow(alreadyShown = []) {
         method: 'POST',
         headers: apiHeaders(),
         body: JSON.stringify({ profile: currentProfile === 'boardroomcxo' ? 'boardroomcxo' : 'ketul', max_age_days: freshnessDays, already_shown: alreadyShown }),
+        signal: progressCard._controller.signal,
       });
       if (!res.ok) throw new Error(await res.text());
       // Real progress: searching = completed/total Tavily queries, generating =
@@ -911,6 +912,7 @@ async function runIndustryNewsFlow(alreadyShown = []) {
     } catch (err) {
       chatState = 'idle';
       document.getElementById('brew-btn').disabled = false;
+      if (err.name === 'AbortError') { markProgressCancelled(progressCard); return; }
       addBotMessage(`Research failed: ${err.message}. Please try again.`);
       return;
     }
@@ -921,7 +923,14 @@ async function runIndustryNewsFlow(alreadyShown = []) {
     await delay(800); setStepDone(progressCard, 1, steps.length); setStepActive(progressCard, 2, steps.length);
     await delay(700); setStepDone(progressCard, 2, steps.length); setStepActive(progressCard, 3, steps.length);
     await delay(900); setStepDone(progressCard, 3, steps.length); setStepActive(progressCard, 4, steps.length);
-    await delay(500); setStepDone(progressCard, 4, steps.length); finishProgress(progressCard);
+    await delay(500); setStepDone(progressCard, 4, steps.length);
+    if (progressCard._controller.signal.aborted) {
+      markProgressCancelled(progressCard);
+      chatState = 'idle';
+      document.getElementById('brew-btn').disabled = false;
+      return;
+    }
+    finishProgress(progressCard);
     options = alreadyShown.length ? INDUSTRY_DEMO_BATCH_2 : [
       { label: 'Myntra x Masaba collab — limited edition drops, community-led fashion', score: 86 },
       { label: 'Amitabh Bachchan launches personal D2C brand — celebrity brand play', score: 83 },
