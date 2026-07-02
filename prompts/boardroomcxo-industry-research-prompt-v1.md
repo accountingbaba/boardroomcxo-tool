@@ -112,7 +112,7 @@ Reject immediately if any apply:
 - Trade, wholesale, B2B manufacturing, gem mining, export policy, or supply chain news
 - Macro trend report, ranking listicle, or "top 10 brands" content with no named concrete event
 - Funding in food, health supplements, pure tech, fintech, or any non-lifestyle category
-- Published more than 15 days ago from today's date
+- Published more than 25 days ago from today's date
 - Source is an SEO blog, forum, Reddit, Quora, unverifiable aggregator, or brand microsite
 - Story describes a shift or trend without anchoring to a specific named brand event
 - Already used as source material for a previous post in this tool (cross-session memory check — the tool's database maintains a log of all previously used source URLs)
