@@ -115,6 +115,11 @@ button, input, textarea { font-family: inherit; }
 .step-label.pending { color: #bbb; }
 .step-dot { width: 5px; height: 5px; border-radius: 50%; background: #1B2B4B; animation: blink 0.9s ease-in-out infinite; }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+.progress-stop-btn { margin-left: auto; display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; color: #9a3b3b; background: #fff; border: 1px solid #e6c9c9; border-radius: 12px; padding: 3px 9px 3px 8px; cursor: pointer; transition: background 0.15s, border-color 0.15s; flex-shrink: 0; }
+.progress-stop-btn:hover:not(:disabled) { background: #fdf3f3; border-color: #d99; }
+.progress-stop-btn:disabled { opacity: 0.6; cursor: default; }
+.progress-card.cancelled .progress-live-dot { animation: none; background: #b33b3b; }
+.progress-card.cancelled .progress-bar-fill { background: #b33b3b; }
 
 /* BOTTOM BAR */
 .bottom-bar { padding: 10px 20px 16px; border-top: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
