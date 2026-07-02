@@ -615,7 +615,7 @@ async function showHeadlineApprovalCard() {
         <input type="text" class="upload-field-input" id="hl-accent" value="${escHtml(headlineOptions[0]?.accent_word || '')}" placeholder="e.g. changed" />
       </div>
       <div class="headline-actions">
-        <button class="save-btn" id="hl-confirm-btn">Confirm &amp; Add Photos</button>
+        <button class="save-btn" id="hl-confirm-btn">Generate Image Prompt</button>
         <button class="action-btn" id="hl-skip-btn">Skip image, go to repurpose</button>
       </div>
     </div>`;
@@ -1274,262 +1274,49 @@ async function readNdjsonStream(response, onEvent) {
   return result;
 }
 
-/* ── IMAGE UPLOAD FLOW ───────────────────────────────────────── */
+/* ── IMAGE PROMPT FLOW ──────────────────────────────────────── */
 
-const LOGO_STORE_KEY = 'bcxo_stored_logos';
-
-function loadStoredLogos() {
-  try { return JSON.parse(localStorage.getItem(LOGO_STORE_KEY) || '{}'); } catch { return {}; }
-}
-
-function saveStoredLogo(slotKey, dataUrl) {
-  const logos = loadStoredLogos();
-  logos[slotKey] = dataUrl;
-  localStorage.setItem(LOGO_STORE_KEY, JSON.stringify(logos));
-}
-
-function clearStoredLogo(slotKey) {
-  const logos = loadStoredLogos();
-  delete logos[slotKey];
-  localStorage.setItem(LOGO_STORE_KEY, JSON.stringify(logos));
-}
-
-function showImageUploadCard(headline, accentWord) {
+async function buildAndShowImagePrompt(headline, accentWord) {
+  chatState = 'generating';
   const area = document.getElementById('chat-area');
-  const card = document.createElement('div');
-  card.className = 'msg-row';
-  card.id = 'image-upload-row';
-
-  const storedLogos = loadStoredLogos();
-
-  function slotZoneHtml(key, label, required, isPersonPhoto) {
-    const stored = storedLogos[key];
-    const reqBadge = required ? '<span class="slot-required">required</span>' : '<span class="slot-optional">optional</span>';
-    const previewHtml = stored
-      ? `<img class="slot-preview-img" src="${stored}" /><div class="slot-stored-label">Saved — click to change</div>`
-      : (isPersonPhoto
-          ? `<div class="slot-upload-text"><strong>Click to upload</strong> (JPG or PNG)</div>`
-          : `<div class="slot-upload-text"><strong>Click to upload</strong> logo (PNG)</div>`);
-    return `
-      <div class="upload-slot" data-slot="${key}">
-        <div class="slot-label">${label} ${reqBadge}</div>
-        <div class="slot-zone ${stored ? 'has-stored' : ''}" id="zone-${key}">
-          <input type="file" accept="image/jpeg,image/png,image/webp" style="display:none" id="file-${key}" />
-          ${previewHtml}
-        </div>
-        ${stored ? `<button class="slot-clear-btn" data-clear="${key}">Remove saved</button>` : ''}
-      </div>`;
-  }
-
-  card.innerHTML = `
+  const loadingCard = document.createElement('div');
+  loadingCard.className = 'msg-row';
+  loadingCard.innerHTML = `
     <div class="msg-label">Content Engine</div>
-    <div class="upload-card">
-      <div class="upload-card-title">Step 2 — Upload images</div>
-      <div class="upload-card-sub">Person photos are uploaded fresh each time. Logos are saved and reused automatically.</div>
-
-      <div class="upload-slots-grid">
-        ${slotZoneHtml('person1', 'Person photo', true, true)}
-        ${slotZoneHtml('person2', 'Person photo 2 (if featuring two people)', false, true)}
-        ${slotZoneHtml('bcxo_logo', 'BoardroomCXO watermark (small, subtle credit mark)', false, false)}
-        ${slotZoneHtml('logo1', 'Brand logo 1 (prominent — the company being featured)', false, false)}
-        ${slotZoneHtml('logo2', 'Brand logo 2 (prominent — second brand, if any)', false, false)}
-        ${slotZoneHtml('logo3', 'Additional brand logo 3 (optional)', false, false)}
-        ${slotZoneHtml('logo4', 'Additional brand logo 4 (optional)', false, false)}
-      </div>
-
-      <div class="upload-hidden-fields" style="display:none">
-        <input type="text" id="img-headline" value="${escHtml(headline || '')}" />
-        <input type="text" id="img-accent" value="${escHtml(accentWord || '')}" />
-      </div>
-
-      <button class="upload-submit-btn" id="upload-submit-btn" disabled>Generate Image</button>
+    <div class="headline-card">
+      <div class="headline-card-title">Building your image prompt...</div>
     </div>`;
-
-  area.appendChild(card);
+  area.appendChild(loadingCard);
   scrollChat();
 
-  // Wire up each slot zone
-  const slotKeys = ['person1', 'person2', 'bcxo_logo', 'logo1', 'logo2', 'logo3', 'logo4'];
-  const isPersonSlot = key => key.startsWith('person');
-  const fileCache = {};
-
-  slotKeys.forEach(key => {
-    const zone = card.querySelector(`#zone-${key}`);
-    const fileInput = card.querySelector(`#file-${key}`);
-    if (!zone || !fileInput) return;
-
-    zone.addEventListener('click', () => fileInput.click());
-
-    fileInput.addEventListener('change', () => {
-      const file = fileInput.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUrl = e.target.result;
-        fileCache[key] = file;
-        zone.innerHTML = `<img class="slot-preview-img" src="${dataUrl}" /><div class="slot-stored-label">Ready</div>`;
-        zone.classList.add('has-stored');
-
-        // Persist logos (not person photos) to localStorage
-        if (!isPersonSlot(key)) {
-          saveStoredLogo(key, dataUrl);
-          // Update or add clear button
-          let clearBtn = card.querySelector(`[data-clear="${key}"]`);
-          if (!clearBtn) {
-            clearBtn = document.createElement('button');
-            clearBtn.className = 'slot-clear-btn';
-            clearBtn.dataset.clear = key;
-            clearBtn.textContent = 'Remove saved';
-            zone.parentNode.appendChild(clearBtn);
-            clearBtn.addEventListener('click', (ev) => {
-              ev.stopPropagation();
-              clearStoredLogo(key);
-              delete fileCache[key];
-              zone.innerHTML = `<input type="file" accept="image/jpeg,image/png,image/webp" style="display:none" id="file-${key}" /><div class="slot-upload-text"><strong>Click to upload</strong> logo (PNG)</div>`;
-              zone.classList.remove('has-stored');
-              clearBtn.remove();
-              card.querySelector(`#file-${key}`).addEventListener('change', fileInput.onchange);
-              checkUploadReady();
-            });
-          }
-        }
-        checkUploadReady();
-      };
-      reader.readAsDataURL(file);
-    });
-  });
-
-  // Wire up clear buttons for pre-stored logos
-  card.querySelectorAll('.slot-clear-btn').forEach(btn => {
-    const key = btn.dataset.clear;
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      clearStoredLogo(key);
-      delete fileCache[key];
-      const zone = card.querySelector(`#zone-${key}`);
-      if (zone) {
-        zone.innerHTML = `<input type="file" accept="image/jpeg,image/png,image/webp" style="display:none" id="file-${key}" /><div class="slot-upload-text"><strong>Click to upload</strong> logo (PNG)</div>`;
-        zone.classList.remove('has-stored');
-        zone.addEventListener('click', () => zone.querySelector('input[type=file]').click());
-        zone.querySelector('input[type=file]').addEventListener('change', function() {
-          const file = this.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = (ev) => {
-            fileCache[key] = file;
-            saveStoredLogo(key, ev.target.result);
-            zone.innerHTML = `<img class="slot-preview-img" src="${ev.target.result}" /><div class="slot-stored-label">Ready</div>`;
-            zone.classList.add('has-stored');
-            checkUploadReady();
-          };
-          reader.readAsDataURL(file);
-        });
-      }
-      btn.remove();
-      checkUploadReady();
-    });
-  });
-
-  function checkUploadReady() {
-    const hasPersonPhoto = !!(fileCache['person1']);
-    document.getElementById('upload-submit-btn').disabled = !hasPersonPhoto;
-  }
-
-  // Pre-load stored logos into fileCache as data URLs for sending
-  slotKeys.filter(k => !isPersonSlot(k)).forEach(key => {
-    if (storedLogos[key]) {
-      fileCache[key] = storedLogos[key]; // store dataUrl directly for non-person slots
-    }
-  });
-
-  document.getElementById('upload-submit-btn').addEventListener('click', () => {
-    const personFile = fileCache['person1'];
-    if (!personFile) return;
-    // Read values BEFORE removing card (card contains the hidden inputs)
-    const headline = card.querySelector('#img-headline')?.value || '';
-    const accent   = card.querySelector('#img-accent')?.value || '';
-    if (!headline) { addBotMessage('Headline text is required before generating the image. Please go back and confirm the headline.'); return; }
-    card.remove();
-    runImagePipeline(personFile, fileCache, headline, accent);
-  });
-}
-
-// Maps a real backend pipeline event to a monotonically increasing overall
-// percentage, so the bar never regresses across the two pipeline stages.
-function imagePipelinePct(evt) {
-  const key = `${evt.stage}:${evt.status}`;
-  switch (key) {
-    case 'analyse_photo:start': return 10;
-    case 'analyse_photo:done': return 55;
-    case 'build_prompt:start': return 65;
-    case 'build_prompt:done': return 95;
-    default: return null;
-  }
-}
-
-async function runImagePipeline(personFile, allFiles, headline, accentWord) {
-  chatState = 'generating';
-
-  const steps = [
-    'Analysing reference photo (Claude Vision)',
-    'Building ChatGPT-ready image prompt',
-  ];
-  const progressCard = showProgress('Building image prompt...', steps);
-
   if (isProd) {
-    setStepActive(progressCard, 0, steps.length);
     try {
-      const formData = new FormData();
-      formData.append('photo', personFile);
-      if (allFiles.person2 instanceof File) formData.append('photo2', allFiles.person2);
-      formData.append('post_text', lastGeneratedPost?.post || '');
-      formData.append('headline', headline);
-      formData.append('accent_word', accentWord);
-      formData.append('profile', lastGeneratedPost?._profile || 'boardroomcxo');
-      if (lastGeneratedPost?.post_id) formData.append('post_id', lastGeneratedPost.post_id);
-      // Send stored logo data
-      ['bcxo_logo','logo1','logo2','logo3','logo4'].forEach(k => {
-        if (allFiles[k]) formData.append(k, allFiles[k] instanceof File ? allFiles[k] : allFiles[k]);
-      });
-
       const res = await fetch(`${API_BASE}/image`, {
         method: 'POST',
-        headers: { 'x-access-passphrase': passphrase },
-        body: formData,
+        headers: { 'Content-Type': 'application/json', 'x-access-passphrase': passphrase },
+        body: JSON.stringify({
+          headline,
+          accent_word: accentWord,
+          profile: lastGeneratedPost?._profile || 'boardroomcxo',
+          post_text: lastGeneratedPost?.post || '',
+          post_id: lastGeneratedPost?.post_id || null,
+        }),
       });
       if (!res.ok) throw new Error(await res.text());
-
-      const data = await readNdjsonStream(res, (evt) => {
-        if (evt.stage === 'analyse_photo') {
-          if (evt.status === 'start') setStepActive(progressCard, 0, steps.length);
-          else setStepDone(progressCard, 0, steps.length);
-        } else if (evt.stage === 'build_prompt') {
-          if (evt.status === 'start') setStepActive(progressCard, 1, steps.length);
-          else setStepDone(progressCard, 1, steps.length);
-        }
-
-        const pct = imagePipelinePct(evt);
-        if (pct !== null) setProgressPct(progressCard, pct);
-      });
-
-      finishProgress(progressCard);
+      const data = await res.json();
+      loadingCard.remove();
       renderImageResult(data);
     } catch (err) {
+      loadingCard.remove();
       chatState = 'done';
       addBotMessage(`Prompt generation failed: ${err.message}. Please try again.`);
     }
   } else {
-    for (let i = 0; i < steps.length; i++) {
-      setStepActive(progressCard, i, steps.length);
-      await delay(1000 + Math.random() * 500);
-      setStepDone(progressCard, i, steps.length);
-    }
-    finishProgress(progressCard);
-
+    await delay(500 + Math.random() * 400);
+    loadingCard.remove();
     renderImageResult({
-      image_prompt: `This image must be built using the attached files only. Every person's photo is the absolute ground truth...\n\n[Demo mode — the real prompt is assembled from your reference photo on Cloudflare, using Claude Vision.]\n\nHeadline: "${headline}" (accent: "${accentWord}")`,
-      subject_description: 'SUBJECT DESCRIPTION — GROUND TRUTH (demo mode, generated on Cloudflare in production)',
-      limitations_notice: 'This tool builds the image prompt only — it does not generate the image. Copy the prompt and paste it into ChatGPT along with the same reference photo(s) and any brand logo file(s), then let ChatGPT generate the image directly.',
+      image_prompt: `This image must be built using the attached files only. Every person's photo is the absolute ground truth...\n\n[Demo mode — the real prompt is assembled on Cloudflare from your saved instructions.]\n\nHeadline: "${headline}" (accent: "${accentWord}")`,
+      limitations_notice: 'This tool builds the image prompt only — it does not generate the image. Copy the prompt and paste it into ChatGPT along with your reference photo(s) and any brand logo file(s), then let ChatGPT generate the image directly.',
       _dev: true,
     });
   }
@@ -1568,12 +1355,11 @@ function renderImageResult(data) {
 
   document.getElementById('regen-img-btn')?.addEventListener('click', () => {
     card.remove();
-    addBotMessage('Upload a reference photo to rebuild the image prompt.');
     showHeadlineApprovalCard();
   });
 
   scrollChat();
-  addBotMessage('Prompt ready. Copy it and paste into ChatGPT along with the same reference photo(s) and any brand logo file(s) to generate the image. Say "repurpose" to generate Instagram, WhatsApp, and Blog versions next.');
+  addBotMessage('Prompt ready. Copy it and paste into ChatGPT along with your reference photo(s) and any brand logo file(s) to generate the image. Say "repurpose" to generate Instagram, WhatsApp, and Blog versions next.');
   chatState = 'done';
 
   // Save to calendar once the prompt is ready
