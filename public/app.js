@@ -441,6 +441,10 @@ function showOptions(header, items, onSelect, onShowMore) {
     </div>`;
   area.appendChild(card);
 
+  card.querySelectorAll('.option-meta-link').forEach(link => {
+    link.addEventListener('click', (e) => e.stopPropagation());
+  });
+
   card.querySelectorAll('.option-row').forEach(row => {
     row.addEventListener('click', () => {
       card.querySelectorAll('.option-row').forEach(r => r.style.pointerEvents = 'none');
