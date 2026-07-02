@@ -313,13 +313,15 @@ async function callClaude(env, system, user, maxTokens = 2000, onProgress) {
   return text;
 }
 
-async function tavilySearch(env, query) {
+async function tavilySearch(env, query, maxAgeDays = 25) {
   const res = await fetch('https://api.tavily.com/search', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       api_key: env.TAVILY_API_KEY,
       query,
+      topic: 'news',
+      days: maxAgeDays,
       search_depth: 'basic',
       max_results: 5,
       include_domains: [
