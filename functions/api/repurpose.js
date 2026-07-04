@@ -136,13 +136,15 @@ export async function onRequestPost(context) {
   const { profile, post_text, post_id } = body || {};
   if (!post_text) return json({ error: 'post_text required' }, 400);
 
+  const resolvedProfile = profile === 'ketul' ? 'ketul' : 'boardroomcxo';
+
   const userMessage = `Here is the finalised LinkedIn post to repurpose:
 
 ---
 ${post_text}
 ---
 
-Profile context: ${profile === 'ketul' ? "CA Ketul Patel's personal LinkedIn profile (first-person voice in the source post)" : "BoardroomCXO company LinkedIn page (company voice in the source post)"}.
+Profile context: ${resolvedProfile === 'ketul' ? "CA Ketul Patel's personal LinkedIn profile (first-person voice in the source post)" : "BoardroomCXO company LinkedIn page (company voice in the source post)"}.
 
 Generate all three platform versions now. Return only valid JSON.`;
 
@@ -152,8 +154,10 @@ Generate all three platform versions now. Return only valid JSON.`;
     if (row?.value) activePrompt = row.value;
   } catch { /* fall back to bundled prompt */ }
 
+  const systemPrompt = applyProfileBranding(activePrompt, resolvedProfile);
+
   try {
-    const raw = await callClaude(env, activePrompt, userMessage, 4000);
+    const raw = await callClaude(env, systemPrompt, userMessage, 4000);
     const parsed = parseJSON(raw);
 
     // Save repurposed content to DB if post_id provided
