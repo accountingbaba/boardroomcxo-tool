@@ -44,8 +44,8 @@ Structure — locked, follow this order every time:
 4. Turning point (1 line): The adversity, the bootstrap moment, or the decision that changed everything. This is where a four-dot ellipsis naturally fits — four literal period characters ("...."), not the single unicode ellipsis character, used mid-sentence where a natural pause, contrast, or reveal exists (example: she finished chemotherapy.... and started a company).
 5. Achievement bullets (4-5 points): Lead each bullet with one relevant emoji (example: ✈️ for flights, 💰 for revenue, 🏆 for awards). Numbers and figures exactly as in the original post. One achievement per bullet, one line each.
 6. Closing (2 lines): Land the core message. Two short, punchy lines — the first sets up the tension, the second resolves it. No motivational clichés.
-7. Follow line (1 line): Always end with — Follow @boardroomcxo for stories of leaders who built differently.
-8. Hashtags (10 total): Placed after the follow line. Always include #LeaderSpotlight and #BoardroomCXO. Remaining 8 must be SEO and AI-search optimised for Instagram discoverability — a mix of broad-reach and niche topic-specific tags, no redundant or low-traffic tags.
+7. Follow line (1 line): {{FOLLOW_LINE}}
+8. Hashtags (10 total): Placed after the follow line. {{HASHTAG_RULE}}
 Emojis: only in the achievement bullet section, one per bullet, placed at the start of the line, directly relevant to that achievement. No emojis anywhere else — not in the opener, context, closing, or follow line. Total emoji count: 4-5.
 
 WHATSAPP COMMUNITY POST RULES:
