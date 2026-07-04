@@ -1666,7 +1666,7 @@ WRITING RULES:
 - No banned words: leverage, synergy, game changer, unlock, revolutionary, delve, landscape, navigate (metaphorical), elevate, empower, seamless, robust, transformative, pivotal, visionary.
 - Never fabricate facts not in the source article.
 - Word count: 150 to 180 words.
-- End with 5-8 hashtags. Always include #BoardroomCXO. Rest contextual to the story.`
+- End with 5-8 hashtags, all contextual to the story. Never include #BoardroomCXO or any BoardroomCXO brand mention — this is Ketul's personal profile, not the company page.`
   },
   {
     key: 'prompt_repurpose',
