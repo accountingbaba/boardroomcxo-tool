@@ -345,7 +345,7 @@ MANDATORY RULES:
 - Word count: 150 to 220 words. Firm ceiling.
 - Use .... (four dots) mid-post at least once as a natural pause. Non-negotiable.
 - Zero em dashes anywhere.
-- 3-5 hashtags including #BoardroomCXO
+- 3-5 hashtags, all contextual to the story. Never include #BoardroomCXO or any BoardroomCXO brand mention — this is Ketul's personal profile, not the company page.
 - No promo line. No CTA. No "follow me for more."
 - Only use facts from the source provided — no hallucinations.
 - Short paragraphs, 1-3 lines each.
