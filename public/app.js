@@ -1168,10 +1168,13 @@ async function runRepurpose(profile, postText, postId) {
     }
     finishProgress(progressCard);
 
+    const isKetulDemo = profile === 'ketul';
     renderRepurposeResult({
       instagram: {
-        caption: `She did not climb the ladder.\n\nShe redesigned it.\n\nFrom a small town to the C-suite of one of the world's most iconic brands... the path was never straight.\n\nBut it was always intentional.\n\nWhat separates the leaders who build something lasting from those who just manage what is already there?\n\nIt is not talent. It is the question they ask.\n\nMost ask: how do I protect what we have?\n\nThe rare ones ask: what would this look like if we started from scratch today?\n\nThat is the difference between a career and a legacy.\n\nFollow @boardroomcxo for stories of leaders who built differently.`,
-        hashtags: '#LeaderSpotlight #BoardroomCXO #IndianCXO #D2CIndia #WomenInLeadership #ExecutiveSearch #IndianLeaders #ConsumerBrands #StartupIndia #LeadershipIndia',
+        caption: `She did not climb the ladder.\n\nShe redesigned it.\n\nFrom a small town to the C-suite of one of the world's most iconic brands... the path was never straight.\n\nBut it was always intentional.\n\nWhat separates the leaders who build something lasting from those who just manage what is already there?\n\nIt is not talent. It is the question they ask.\n\nMost ask: how do I protect what we have?\n\nThe rare ones ask: what would this look like if we started from scratch today?\n\nThat is the difference between a career and a legacy.\n\n${isKetulDemo ? 'Follow CA Ketul Patel for more insights.' : 'Follow @boardroomcxo for stories of leaders who built differently.'}`,
+        hashtags: isKetulDemo
+          ? '#IndianCXO #D2CIndia #WomenInLeadership #IndianLeaders #ConsumerBrands #StartupIndia #LeadershipIndia #FounderMindset #D2CFounders #IndiaRetail'
+          : '#LeaderSpotlight #BoardroomCXO #IndianCXO #D2CIndia #WomenInLeadership #ExecutiveSearch #IndianLeaders #ConsumerBrands #StartupIndia #LeadershipIndia',
       },
       whatsapp: {
         message: `*A story worth 2 minutes of your time.*\n\nMost leaders ask: how do I protect what we have?\n\nThe rare ones ask: what would this look like if we built it from scratch today?\n\nKey facts:\n- 30+ year career across multiple industries\n- Led one of the most recognised brand transformations in Indian consumer markets\n- Proved that homegrown leaders can outperform external hires at the highest level\n\nThe ones who build for the next cycle... always look prescient in hindsight. They are not. They are just asking a different question earlier.`,
