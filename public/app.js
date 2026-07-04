@@ -1690,8 +1690,8 @@ Audience: Gen Z professionals, young leaders, students interested in business an
 4. Turning point (1 line): the adversity or decision that changed everything — natural spot for a four-dot ellipsis ("....", four literal periods, not the unicode ellipsis).
 5. Achievement bullets (4-5, one emoji each at the start, exact numbers, one line each).
 6. Closing (2 lines): punchy, tension then resolution, no clichés.
-7. Follow line: Follow @boardroomcxo for stories of leaders who built differently.
-8. Hashtags (10, after the follow line): always #LeaderSpotlight #BoardroomCXO, rest SEO/AI-search optimised and contextual.
+7. Follow line: BoardroomCXO profile → "Follow @boardroomcxo for stories of leaders who built differently." | Ketul profile → "Follow CA Ketul Patel for more insights." (never BoardroomCXO branding on Ketul's profile).
+8. Hashtags (10, after the follow line): BoardroomCXO profile → always #LeaderSpotlight #BoardroomCXO plus 8 contextual. Ketul profile → 10 contextual hashtags only, never #BoardroomCXO or #LeaderSpotlight.
 Emojis only in the achievement bullets, one per bullet, nowhere else.
 
 VERSION 2 — WHATSAPP COMMUNITY POST (locked structure, 70-90 words excluding title line, 10-13 lines, 4-5 achievement points):
