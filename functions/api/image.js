@@ -74,20 +74,28 @@ export async function onRequestPost(context) {
 function buildImagePrompt(customInstructions, headline, accentWord, profile) {
   let instructions = (customInstructions && customInstructions.trim()) || DEFAULT_IMAGE_INSTRUCTIONS;
   const footerTag = FOOTER_TAG_BY_PROFILE[profile] || FOOTER_TAG_BY_PROFILE.boardroomcxo;
+  const isKetul = profile === 'ketul';
 
-  if (profile === 'ketul') {
+  if (isKetul) {
     // Personal profile — no BoardroomCXO co-branding in the image at all.
+    // Strip any line mentioning BoardroomCXO at all (not just "…logo"), since
+    // a custom saved prompt (Settings → Prompts panel) may phrase the brand
+    // watermark instruction differently and a narrower match would miss it.
     instructions = instructions
       .split('\n')
-      .filter(line => !/boardroomcxo logo/i.test(line))
+      .filter(line => !/boardroomcxo/i.test(line))
       .join('\n');
   }
+
+  const ketulHardRule = isKetul
+    ? `\n\nHARD RULE — this is CA Ketul Patel's personal profile, not the BoardroomCXO company page: do not render the BoardroomCXO logo, watermark, wordmark, or any BoardroomCXO branding anywhere in the image, regardless of any other instruction below. The only footer follow-line permitted is the exact text specified above ("${footerTag}") — never substitute it with a BoardroomCXO follow line or hashtag.`
+    : '';
 
   return `TEXT TO RENDER ONTO THE IMAGE — satisfy this first, it is the single most important requirement: in the bottom 20-22% of the frame, over a natural dark fade (not a coloured panel), render this exact text as real typography baked into the picture — not described in words, not left blank. Use Inter Bold (clean geometric sans-serif, tight letter spacing) for both lines:
 - Headline, Inter Bold, large and dominant, white with "${accentWord}" in orange (#FF6B00), one line only — shrink the font to fit rather than wrapping or dropping it: "${headline}"
 - Below it, Inter Bold at a much smaller size, muted (white, ~65% opacity): "${footerTag}"
 
-${instructions}
+${instructions}${ketulHardRule}
 
 Now generate the image directly. Do not reply with a checklist or a list of issues instead of the image — if any part can't be reproduced perfectly, generate your best attempt anyway and note the limitation briefly after the image, never instead of it.`;
 }
