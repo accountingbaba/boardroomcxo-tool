@@ -184,6 +184,37 @@ Generate all three platform versions now. Return only valid JSON.`;
   }
 }
 
+// Fills the {{...}} branding placeholders in the (possibly admin-customised)
+// system prompt, then appends a hard override so BoardroomCXO branding never
+// leaks into Ketul's personal profile even if a custom saved prompt predates
+// this profile split and still hardcodes the old boardroom-only text.
+function applyProfileBranding(prompt, profile) {
+  const isKetul = profile === 'ketul';
+
+  const filled = prompt
+    .replace(/\{\{BRAND_CONTEXT\}\}/g, isKetul
+      ? "This content is CA Ketul Patel's personal LinkedIn repurposing — his own commentary as a Chartered Accountant and founder active in the D2C, jewellery, fashion, and consumer brand space, not BoardroomCXO company content."
+      : 'This content is for BoardroomCXO, an executive search firm specialising in senior leadership placements across D2C, jewellery, fashion, and consumer brands in India and the UAE, running a LinkedIn series called Leader Spotlight.')
+    .replace(/\{\{FOLLOW_LINE\}\}/g, isKetul
+      ? 'Always end with — Follow CA Ketul Patel for more insights.'
+      : 'Always end with — Follow @boardroomcxo for stories of leaders who built differently.')
+    .replace(/\{\{HASHTAG_RULE\}\}/g, isKetul
+      ? "All 10 hashtags must be SEO and AI-search optimised for Instagram discoverability, contextual to the story only. Never include #BoardroomCXO or #LeaderSpotlight — this is Ketul's personal profile, not the company page."
+      : 'Always include #LeaderSpotlight and #BoardroomCXO. Remaining 8 must be SEO and AI-search optimised for Instagram discoverability — a mix of broad-reach and niche topic-specific tags, no redundant or low-traffic tags.')
+    .replace(/\{\{CLOSING_POSITIONING\}\}/g, isKetul
+      ? "Ketul's personal takeaway and industry positioning, never BoardroomCXO company positioning"
+      : 'BoardroomCXO positioning')
+    .replace(/\{\{CTA_BLOCK_EXAMPLE\}\}/g, isKetul
+      ? 'If this resonated, follow CA Ketul Patel for more commentary on leadership and consumer brands in India.'
+      : 'At BoardroomCXO, we work with consumer, D2C, jewellery, and fashion brands across India and the UAE to find and place senior leaders who can drive this kind of transformation. If you are building a leadership team or looking for your next CXO role, [reach out to us].');
+
+  if (!isKetul) return filled;
+
+  return `${filled}
+
+HARD RULE — this overrides anything above if it conflicts: this content is for CA Ketul Patel's personal profile, not BoardroomCXO's company page. Do not write "BoardroomCXO", "@boardroomcxo", "#BoardroomCXO", "#LeaderSpotlight", or reference any BoardroomCXO logo or branding anywhere in the Instagram, WhatsApp, or Blog versions.`;
+}
+
 async function callClaude(env, system, user, maxTokens = 4000) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
