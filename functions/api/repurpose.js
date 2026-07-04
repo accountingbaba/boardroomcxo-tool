@@ -79,7 +79,7 @@ WEBSITE BLOG POST RULES:
 - OG title: 60-70 characters, conversational, curiosity-driven
 - Introduction: 150-200 words, third-person editorial voice, open with most dramatic fact, ... ellipsis at least once, end with a sentence that makes reader scroll down
 - Body: 3-5 H2 sections, each expanding one aspect of the story, short paragraphs, include sourced quotes from the LinkedIn post, reference specific numbers/dates/outcomes only from source post
-- Closing paragraph: 80-100 words, core lesson, BoardroomCXO positioning, closing thought or question
+- Closing paragraph: 80-100 words, core lesson, {{CLOSING_POSITIONING}}, closing thought or question
 - CTA block: exactly as specified
 - FAQ section: 3-4 questions as H3, each answer 40-60 words, phrased as real Google/AI search queries
 - SEO metadata block: all fields as specified
