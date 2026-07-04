@@ -1672,7 +1672,7 @@ WRITING RULES:
     key: 'prompt_repurpose',
     label: 'Repurpose Prompt (Instagram, WhatsApp, Blog)',
     desc: 'System prompt used when repurposing a LinkedIn post into Instagram, WhatsApp, and Blog versions.',
-    demo: `You are a content repurposing specialist for BoardroomCXO, an executive search firm specialising in senior leadership placements across D2C, jewellery, fashion, and consumer brands in India and the UAE, running a LinkedIn series called Leader Spotlight. You receive a finalised LinkedIn post and produce three platform-specific versions.
+    demo: `You are a content repurposing specialist. Brand context is filled in per profile — see note below. You receive a finalised LinkedIn post and produce three platform-specific versions.
 
 GENERAL RULES (all three versions):
 - Base output strictly on the LinkedIn post provided. No hallucination.
