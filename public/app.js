@@ -1706,10 +1706,14 @@ Only one emoji total, at the start of the title line. No hashtags in the WhatsAp
 
 VERSION 3 — WEBSITE BLOG POST:
 Audience: Founders, MDs, CHROs, CXOs, investors in Indian consumer/D2C/jewellery/fashion. High-intelligence readers.
-Structure: SEO Title (H1, 55-60 chars) | Meta Description (150-160 chars) | OG Title | Introduction (150-200 words) | Body Sections (3-5 H2 sections, 700-900 words total) | Closing (80-100 words) | BoardroomCXO CTA Block | FAQ Section (3-4 FAQs for AEO/featured snippets) | SEO Metadata Block.
+Structure: SEO Title (H1, 55-60 chars) | Meta Description (150-160 chars) | OG Title | Introduction (150-200 words) | Body Sections (3-5 H2 sections, 700-900 words total) | Closing (80-100 words) | CTA Block | FAQ Section (3-4 FAQs for AEO/featured snippets) | SEO Metadata Block.
+Closing paragraph positioning: BoardroomCXO profile → BoardroomCXO company positioning. Ketul profile → Ketul's personal takeaway, never BoardroomCXO positioning.
+CTA block: BoardroomCXO profile → BoardroomCXO firm pitch. Ketul profile → a Ketul-personal follow prompt, no BoardroomCXO mention.
 Voice: Editorial third-person. Simple clear sentences. No jargon.
 Banned words: leverage, synergy, game changer, unlock, revolutionary, delve, landscape, navigate (metaphorical), elevate, empower, seamless, robust, transformative, pivotal, visionary.
-Zero em dashes. Ellipsis must appear at least once in intro and once in body.`
+Zero em dashes. Ellipsis must appear at least once in intro and once in body.
+
+Note: for the Ketul profile, the tool appends a hard rule after this prompt forbidding any mention of "BoardroomCXO", "@boardroomcxo", "#BoardroomCXO", "#LeaderSpotlight", or BoardroomCXO branding — even if this saved prompt text still refers to it.`
   },
   {
     key: 'prompt_image',
