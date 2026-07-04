@@ -105,7 +105,7 @@ Return ONLY valid JSON in this exact structure. No markdown fences outside the J
       { "h2": "Section Title", "content": "section body paragraphs" }
     ],
     "closing": "",
-    "cta_block": "At BoardroomCXO, we work with consumer, D2C, jewellery, and fashion brands across India and the UAE to find and place senior leaders who can drive this kind of transformation. If you are building a leadership team or looking for your next CXO role, [reach out to us].",
+    "cta_block": "{{CTA_BLOCK_EXAMPLE}}",
     "faqs": [
       { "question": "Q?", "answer": "40-60 word answer" }
     ],
