@@ -128,7 +128,7 @@ Priority story types:
 - Leader who built something nobody believed in
 - Leader who created or redefined an entire category in India
 
-Score each leader out of 100 for virality potential (five factors: hook strength, emotional resonance, shareability, engagement trigger, narrative arc — 20 points each).${excludeBlock}${pastContext}
+Score each leader out of 100 for virality potential (five factors: hook strength, emotional resonance, shareability, engagement trigger, narrative arc — 20 points each).${excludeBlock}${blacklistBlock}${pastContext}
 
 OUTPUT FORMAT — return ONLY valid JSON, no markdown, no explanation:
 {
