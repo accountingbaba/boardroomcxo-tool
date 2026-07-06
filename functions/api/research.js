@@ -101,6 +101,10 @@ async function runLeaderResearch(env, emit, alreadyShown = []) {
     ? `\n\nEXCLUSION LIST — never suggest these leaders:\n${excluded.map(e => `- ${e}`).join('\n')}`
     : '\n\nNo leaders have been published yet. All are eligible.';
 
+  const blacklistBlock = blacklist.length > 0
+    ? `\n\nBANNED — the user has explicitly said never to suggest these people, under any name variant, regardless of how strong their story is:\n${blacklist.map(b => `- ${b}`).join('\n')}`
+    : '';
+
   const systemPrompt = `You are a research engine for the BoardroomCXO LinkedIn content tool.
 
 BoardroomCXO is an executive search firm founded by CA Ketul Patel, specialising in placing senior leadership talent across D2C, jewellery, fashion, and consumer brands in India and the UAE.
