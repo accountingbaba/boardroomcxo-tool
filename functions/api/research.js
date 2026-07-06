@@ -150,8 +150,17 @@ Return exactly 5 options, ranked by score descending.`;
   const response = await callClaude(env, systemPrompt, 'Generate the 5-leader shortlist now.', maxTokens, (chars) => emit({ stage: 'generating', chars, max_tokens: maxTokens }));
   const parsed = parseJSON(response);
   if (!parsed?.options) throw new Error('No options in response');
-  if (parsed.options.length === 0) throw new Error('No leaders passed the criteria. Please try again.');
-  return { options: parsed.options };
+
+  // Safety net: the model can still slip a banned/excluded name past prompt
+  // instructions, so hard-filter the result before it ever reaches the user.
+  const banned = [...excluded, ...blacklist].map(n => n.toLowerCase());
+  const options = parsed.options.filter(o => {
+    const name = (o.name || o.label || '').toLowerCase();
+    return !banned.some(b => name.includes(b));
+  });
+
+  if (options.length === 0) throw new Error('No leaders passed the criteria. Please try again.');
+  return { options };
 }
 
 /* ── INDUSTRY NEWS RESEARCH ──────────────────────────────────── */
