@@ -71,6 +71,18 @@ async function runLeaderResearch(env, emit, alreadyShown = []) {
   // a previous "show more" batch) so a fresh search doesn't repeat them.
   excluded = Array.from(new Set([...excluded, ...alreadyShown]));
 
+  // Load blacklist terms (people/topics manually banned in Settings) — these
+  // are permanent regardless of publish status, unlike the exclusions above.
+  let blacklist = [];
+  try {
+    const rows = await env.DB.prepare(
+      "SELECT term FROM blacklist WHERE profile IS NULL OR profile = 'boardroomcxo'"
+    ).all();
+    blacklist = rows.results.map(r => r.term);
+  } catch {
+    // ignore if DB unavailable
+  }
+
   // Load last 20 preferences for self-learning context
   let pastContext = '';
   try {
