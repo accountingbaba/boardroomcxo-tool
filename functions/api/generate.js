@@ -99,18 +99,18 @@ IMPORTANT: Return ONLY valid JSON, no markdown fences, no explanation outside th
   }
 }`;
 
-  const maxTokens = 4000;
+  const maxTokens = 6000;
   const raw = await callClaude(env, masterPrompt, userMessage, maxTokens, (chars) => emit({ stage: 'generating', chars, max_tokens: maxTokens }));
   const parsed = parseJSON(raw);
+  if (!parsed.post) throw new Error('Claude response did not include post text — try regenerating');
 
   // Save to DB
-  let postId = null;
+  const postId = crypto.randomUUID();
   try {
-    const result = await env.DB.prepare(`
-      INSERT INTO posts (profile, content_type, subject, linkedin_post, virality_score, seo_score, aeo_score, status)
-      VALUES (?, 'leader_spotlight', ?, ?, ?, ?, ?, 'draft')
-    `).bind('boardroomcxo', leaderName, parsed.post, parsed.virality_score, parsed.seo_score, parsed.aeo_score).run();
-    postId = result.meta?.last_row_id;
+    await env.DB.prepare(`
+      INSERT INTO posts (id, profile, content_type, subject, linkedin_post, virality_score, seo_score, aeo_score, status)
+      VALUES (?, ?, 'leader_spotlight', ?, ?, ?, ?, ?, 'draft')
+    `).bind(postId, 'boardroomcxo', leaderName, parsed.post, parsed.virality_score, parsed.seo_score, parsed.aeo_score).run();
   } catch {
     // DB not wired — continue
   }
