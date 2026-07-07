@@ -63,6 +63,7 @@ The "headlines" array must contain exactly 5 items, sorted by virality_score des
     );
     const parsed = parseJSON(raw);
     const headlines = Array.isArray(parsed.headlines) ? parsed.headlines : [];
+    if (headlines.length === 0) throw new Error('Claude response did not include any headlines — try regenerating');
     headlines.sort((a, b) => (b.virality_score || 0) - (a.virality_score || 0));
     return json({ headlines });
   } catch (err) {
