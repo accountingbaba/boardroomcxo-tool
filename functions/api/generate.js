@@ -164,18 +164,18 @@ Follow the complete operating schema. Write from Ketul's first-person POV — no
   }
 }`;
 
-  const maxTokens = 3500;
+  const maxTokens = 5000;
   const raw = await callClaude(env, masterPrompt, userMessage, maxTokens, (chars) => emit({ stage: 'generating', chars, max_tokens: maxTokens }));
   const parsed = parseJSON(raw);
+  if (!parsed.post) throw new Error('Claude response did not include post text — try regenerating');
 
   // Save to DB and mark source URL as used
-  let postId = null;
+  const postId = crypto.randomUUID();
   try {
-    const result = await env.DB.prepare(`
-      INSERT INTO posts (profile, content_type, subject, source_url, linkedin_post, virality_score, seo_score, aeo_score, status)
-      VALUES (?, 'industry_news', ?, ?, ?, ?, ?, ?, 'draft')
-    `).bind('ketul', brand, url, parsed.post, parsed.virality_score, parsed.seo_score, parsed.aeo_score).run();
-    postId = result.meta?.last_row_id;
+    await env.DB.prepare(`
+      INSERT INTO posts (id, profile, content_type, subject, source_url, linkedin_post, virality_score, seo_score, aeo_score, status)
+      VALUES (?, 'ketul', 'industry_news', ?, ?, ?, ?, ?, ?, 'draft')
+    `).bind(postId, brand, url, parsed.post, parsed.virality_score, parsed.seo_score, parsed.aeo_score).run();
 
     // Mark source URL as used for cross-session deduplication
     if (url) {
