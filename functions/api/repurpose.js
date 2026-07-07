@@ -135,6 +135,7 @@ export async function onRequestPost(context) {
 
   const { profile, post_text, post_id } = body || {};
   if (!post_text) return json({ error: 'post_text required' }, 400);
+  if (profile && profile !== 'boardroomcxo' && profile !== 'ketul') return json({ error: 'Unknown profile' }, 400);
 
   const resolvedProfile = profile === 'ketul' ? 'ketul' : 'boardroomcxo';
 
