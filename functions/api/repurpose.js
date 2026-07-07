@@ -158,8 +158,11 @@ Generate all three platform versions now. Return only valid JSON.`;
   const systemPrompt = applyProfileBranding(activePrompt, resolvedProfile);
 
   try {
-    const raw = await callClaude(env, systemPrompt, userMessage, 4000);
+    const raw = await callClaude(env, systemPrompt, userMessage, 6000);
     const parsed = parseJSON(raw);
+    if (!parsed.instagram || !parsed.whatsapp || !parsed.blog) {
+      throw new Error('Claude response was missing one or more platform versions — try regenerating');
+    }
 
     // Save repurposed content to DB if post_id provided
     if (post_id) {
